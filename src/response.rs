@@ -12,6 +12,16 @@ impl Response {
         Ok(())
     }
 
+    pub async fn source_response(&self) -> ResponseResult<()> {
+        self.bot
+            .send_message(
+                self.msg.chat.id,
+                "My source code can be found at: https://github.com/Riceman2000/tg-gpt-bot",
+            )
+            .await?;
+        Ok(())
+    }
+
     pub async fn test_api_response(&self) -> ResponseResult<()> {
         let open_ai = OpenAiApi::new();
         let response = match open_ai.test_connection().await {

@@ -18,8 +18,10 @@ async fn main() {
     description = "These commands are supported:"
 )]
 enum Command {
-    #[command(description = "display this text.")]
+    #[command(description = "Display this text.")]
     Help,
+    #[command(description = "Display a link to my source code.")]
+    Source,
     #[command(description = "Test API connection by fetching a list of models from OpenAI")]
     TestApi,
     #[command(description = "Send a prompt")]
@@ -33,6 +35,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             responder
                 .help_response(Command::descriptions().to_string())
                 .await?;
+        }
+        Command::Source => {
+            responder.source_response().await?;
         }
         Command::TestApi => {
             responder.test_api_response().await?;
