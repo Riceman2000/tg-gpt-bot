@@ -20,18 +20,25 @@ async fn main() {
 enum Command {
     #[command(description = "display this text.")]
     Help,
-    #[command(description = "simple test")]
-    Test(i32),
+    #[command(description = "Test API connection by fetching a list of models from OpenAI")]
+    TestApi,
+    #[command(description = "Send a prompt")]
+    Prompt(String),
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
     let responder = response::Response { bot, msg };
     match cmd {
         Command::Help => {
-            responder.help_response(Command::descriptions().to_string()).await?;
+            responder
+                .help_response(Command::descriptions().to_string())
+                .await?;
         }
-        Command::Test(input) => {
-            responder.test_response(input).await?;
+        Command::TestApi => {
+            responder.test_api_response().await?;
+        }
+        Command::Prompt(prompt) => {
+            responder.prompt_response(prompt).await?;
         }
     };
     Ok(())
