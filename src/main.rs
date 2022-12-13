@@ -24,26 +24,29 @@ enum Command {
     Source,
     #[command(description = "Test API connection by fetching a list of models from OpenAI")]
     TestApi,
-    #[command(description = "Send a prompt")]
-    Prompt(String),
+    #[command(description = "Send a prompt to generate text")]
+    Text(String),
+    #[command(description = "Send a prompt to generate an image")]
+    Image(String),
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
     let responder = response::Response { bot, msg };
     match cmd {
         Command::Help => {
-            responder
-                .help_response(Command::descriptions().to_string())
-                .await?;
+            responder.help(Command::descriptions().to_string()).await?;
         }
         Command::Source => {
-            responder.source_response().await?;
+            responder.source().await?;
         }
         Command::TestApi => {
-            responder.test_api_response().await?;
+            responder.test_api().await?;
         }
-        Command::Prompt(prompt) => {
-            responder.prompt_response(prompt).await?;
+        Command::Text(prompt) => {
+            responder.text(prompt).await?;
+        }
+        Command::Image(prompt) => {
+            responder.image(prompt).await?;
         }
     };
     Ok(())

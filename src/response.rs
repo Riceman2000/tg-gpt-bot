@@ -1,5 +1,7 @@
 use super::open_ai_api::*;
 use teloxide::prelude::*; // Local
+use teloxide::types::InputFile;
+use url::Url;
 
 pub struct Response {
     pub bot: Bot,
@@ -7,12 +9,12 @@ pub struct Response {
 }
 
 impl Response {
-    pub async fn help_response(&self, disc: String) -> ResponseResult<()> {
+    pub async fn help(&self, disc: String) -> ResponseResult<()> {
         self.bot.send_message(self.msg.chat.id, disc).await?;
         Ok(())
     }
 
-    pub async fn source_response(&self) -> ResponseResult<()> {
+    pub async fn source(&self) -> ResponseResult<()> {
         self.bot
             .send_message(
                 self.msg.chat.id,
@@ -22,7 +24,7 @@ impl Response {
         Ok(())
     }
 
-    pub async fn test_api_response(&self) -> ResponseResult<()> {
+    pub async fn test_api(&self) -> ResponseResult<()> {
         let open_ai = OpenAiApi::new();
         let response = match open_ai.test_connection().await {
             Ok(resp_string) => resp_string,
@@ -32,14 +34,35 @@ impl Response {
         Ok(())
     }
 
-    pub async fn prompt_response(&self, prompt: String) -> ResponseResult<()> {
+    pub async fn text(&self, prompt: String) -> ResponseResult<()> {
         let open_ai = OpenAiApi::new();
-        let response = match open_ai.prompt(prompt).await {
+        let response = match open_ai.text(prompt).await {
             Ok(resp_string) => resp_string,
             Err(error) => format!("Error during API call: {error}"),
         };
 
         self.bot.send_message(self.msg.chat.id, response).await?;
+        Ok(())
+    }
+
+    pub async fn image(&self, prompt: String) -> ResponseResult<()> {
+        let open_ai = OpenAiApi::new();
+        let response = match open_ai.image(prompt.clone()).await {
+            Ok(resp_string) => resp_string,
+            Err(error) => format!("Error during API call: {error}"),
+        };
+
+        // If the result is a properly formed URL, send it as an image
+        match Url::parse(&response) {
+            Ok(url) => {
+                let file: InputFile = InputFile::url(url);
+                self.bot.send_photo(self.msg.chat.id, file).await?;
+                self.bot.send_message(self.msg.chat.id, prompt).await?;
+            }
+            Err(_) => {
+                self.bot.send_message(self.msg.chat.id, response).await?;
+            }
+        };
         Ok(())
     }
 }

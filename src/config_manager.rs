@@ -1,21 +1,23 @@
 use serde_derive::{Deserialize, Serialize};
+use std::error;
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 use std::path::Path;
-use std::error;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigManager {
     pub text_model: String,
     pub max_tokens: u32,
+    pub image_size: String,
 }
 
 // Default config values
 impl Default for ConfigManager {
     fn default() -> Self {
-        ConfigManager{
+        ConfigManager {
             text_model: "text-davinci-003".to_string(),
             max_tokens: 32,
+            image_size: "512x512".to_string(),
         }
     }
 }
@@ -34,7 +36,7 @@ impl ConfigManager {
 
         match serialized_data.write_file() {
             Ok(_) => (),
-            Err(error) => panic!("Cannot write config data: {error}")
+            Err(error) => panic!("Cannot write config data: {error}"),
         };
 
         serialized_data
@@ -47,17 +49,17 @@ impl ConfigManager {
 
         let mut json_string = String::new();
         file.read_to_string(&mut json_string)?;
-        
+
         let serialized_data: ConfigManager = serde_json::from_str(&json_string)?;
-        
+
         Ok(serialized_data)
     }
 
-    pub fn write_file(&self) -> Result<(), Box<dyn error::Error>>{ 
+    pub fn write_file(&self) -> Result<(), Box<dyn error::Error>> {
         let path = Path::new("config.json");
 
         let json_string = serde_json::to_string_pretty(&self)?;
-        
+
         let mut file = OpenOptions::new()
             .create(true)
             .write(true)
