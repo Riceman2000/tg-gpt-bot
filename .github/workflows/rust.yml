@@ -12,11 +12,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build-debug
+    - name: build-x86-debug
       run: cargo build --verbose
+    - name: tests
+      run: cargo test --verbose
+    - name: artifact-build
       uses: actions/upload-artifact@v3
       with: 
         name: tg-gpt-x86-debug
         path: target\debug\tg-gpt-bot.exe
-    - name: Run tests
-      run: cargo test --verbose
