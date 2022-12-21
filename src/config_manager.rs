@@ -16,7 +16,7 @@ impl Default for ConfigManager {
     fn default() -> Self {
         ConfigManager {
             text_model: "text-davinci-003".to_string(),
-            max_tokens: 32,
+            max_tokens: 128,
             image_size: "512x512".to_string(),
         }
     }
