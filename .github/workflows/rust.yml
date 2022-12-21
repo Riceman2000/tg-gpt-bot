@@ -17,10 +17,10 @@ jobs:
     - name: tests
       run: |
         cargo test --verbose
-        ls target\debug
+        ls target/debug
         tree .
     - name: artifact-build
       uses: actions/upload-artifact@v3
       with: 
         name: tg-gpt-x86-debug
-        path: target\debug\tg-gpt-bot.exe
+        path: target/debug/tg-gpt-bot.exe
