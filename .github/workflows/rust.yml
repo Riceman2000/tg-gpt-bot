@@ -1,22 +1,21 @@
 name: Rust
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+on: [push, pull_request]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build-x86:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build
+    - name: Build-debug
       run: cargo build --verbose
+      with: 
+        name: tg-gpt-x86-debug
+        path: target\debug\tg-gpt-bot.exe
     - name: Run tests
       run: cargo test --verbose
