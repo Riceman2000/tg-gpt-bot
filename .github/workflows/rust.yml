@@ -15,7 +15,10 @@ jobs:
     - name: build-x86-debug
       run: cargo build --verbose
     - name: tests
-      run: cargo test --verbose
+      run: |
+        cargo test --verbose
+        ls target\debug
+        tree .
     - name: artifact-build
       uses: actions/upload-artifact@v3
       with: 
