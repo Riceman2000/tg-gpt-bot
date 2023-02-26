@@ -12,8 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: build-debug
-      run: cargo build --verbose
+    - name: format
+      run: cargo fmt --verbose
     - name: tests
       run: cargo test --verbose
     - name: build-release
@@ -21,5 +21,6 @@ jobs:
     - name: artifact-build
       uses: actions/upload-artifact@v3
       with: 
-        name: tg-gpt-debug
-        path: target/release/tg-gpt-bot
+        name: tg-gpt-bot
+        path: target/release/tg-gpt-bot.exe
+
