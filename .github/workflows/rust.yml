@@ -6,41 +6,20 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-x86:
+  build:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-    - name: build-x86-debug
+    - name: build-debug
       run: cargo build --verbose
     - name: tests
       run: cargo test --verbose
-    - name: build-x86-release
+    - name: build-release
       run: cargo build --verbose --release
     - name: artifact-build
       uses: actions/upload-artifact@v3
       with: 
-        name: tg-gpt-x86-debug
+        name: tg-gpt-debug
         path: target/release/tg-gpt-bot
-
-
-  build-ARM:
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: config-ARM-target
-      run: rustup target add armv7-unknown-linux-gnueabihf
-    - name: build-ARM-debug
-      run: cargo build --target=armv7-unknown-linux-gnueabihf
-    - name: tests
-      run: |
-        cargo test --verbose
-        ls target/armv7-unknown-linux-gnueabihf
-    - name: artifact-build
-      uses: actions/upload-artifact@v3
-      with: 
-        name: tg-gpt-x86-debug
-        path: target/armv7-unknown-linux-gnueabihf/tg-gpt-bot
