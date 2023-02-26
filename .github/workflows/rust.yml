@@ -22,5 +22,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with: 
         name: tg-gpt-bot
-        path: target/release/tg-gpt-bot.exe
+        path: target/release/tg-gpt-bot
 
