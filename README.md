@@ -13,6 +13,8 @@ Telegram bot written in Rust to access the GPT API.
 TELOXIDE_TOKEN=[TELEGRAM BOT API TOKEN]
 OPEN_AI_TOKEN=[OPEN AI API TOKEN]
 OPEN_AI_URI=https://api.openai.com/v1
+RUST_LOG=DEBUG
+
 ```
   - Get the Telegram API key from the @BotFather bot on Telegram
   - Get the OpenAI API key from an OpenAI account

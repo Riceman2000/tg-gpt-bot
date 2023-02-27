@@ -12,8 +12,8 @@ dotenv = "0.15.0"
 
 # To run the Telegram bot with teloxide
 teloxide = { version = "0.11", features = ["macros"] }
-log = "0.4"
 pretty_env_logger = "0.4"
+log = "0.4.17"
 
 # Open AI integration via HTTPS REST API
 hyper = { version = "0.14.23", features = ["full"]}
