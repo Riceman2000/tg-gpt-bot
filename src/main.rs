@@ -1,5 +1,5 @@
 use teloxide::{prelude::*, utils::command::BotCommands};
-use tg_gpt_bot::*; 
+use tg_gpt_bot::*;
 
 #[tokio::main]
 async fn main() {
