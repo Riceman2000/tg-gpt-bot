@@ -2,9 +2,10 @@ use super::config_manager::*;
 use hyper::body::Buf;
 use hyper::{Body, Client, Request};
 use hyper_tls::HttpsConnector;
+use log::{debug, info};
 use serde_derive::{Deserialize, Serialize};
 use std::env;
-use std::error; // Local
+use std::error;
 
 pub struct OpenAiApi {
     client: Client<HttpsConnector<hyper::client::HttpConnector>>,
@@ -38,6 +39,7 @@ impl OpenAiApi {
     }
 
     pub async fn test_connection(&self) -> Result<String, Box<dyn error::Error>> {
+        info!(target: "api_events", "Test connection started.");
         // Ask for list of models to check auth
         let request = Request::builder()
             .uri(format!("{}/models", self.uri))
@@ -59,6 +61,8 @@ impl OpenAiApi {
     }
 
     pub async fn text(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
+        info!(target: "api_events", "Text gen started.");
+        debug!(target: "api_events", "Text prompt: {}", prompt);
         if prompt.is_empty() {
             return Ok("Prompt is empty, usage: '/text [PROMPT HERE]'".to_string());
         }
@@ -94,6 +98,8 @@ impl OpenAiApi {
     }
 
     pub async fn image(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
+        info!(target: "api_events", "Image gen started.");
+        debug!(target: "api_events", "Image prompt: {}", prompt);
         if prompt.is_empty() {
             return Ok("Prompt is empty, usage: '/image [PROMPT HERE]'".to_string());
         }

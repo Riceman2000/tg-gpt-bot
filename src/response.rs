@@ -1,5 +1,5 @@
 use super::open_ai_api::*;
-use teloxide::prelude::*; // Local
+use teloxide::prelude::*;
 use teloxide::types::InputFile;
 use url::Url;
 

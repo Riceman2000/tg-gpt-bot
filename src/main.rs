@@ -1,12 +1,13 @@
 use teloxide::{prelude::*, utils::command::BotCommands};
-use tg_gpt_bot::*; // Local
+use tg_gpt_bot::*;
 
 #[tokio::main]
 async fn main() {
+    dotenv::dotenv().ok(); // from .env file
+
     pretty_env_logger::init();
     log::info!("Starting command bot...");
 
-    dotenv::dotenv().ok(); // from .env file
     let bot = Bot::from_env();
 
     Command::repl(bot, answer).await;
