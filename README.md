@@ -23,6 +23,7 @@ RUST_LOG=DEBUG
 - Run the program using `cargo run`
 - Test on Telegram by starting a conversation with the bot and sending it `/help`
 - After your first run of the program a `config.json` file will be generated, this file can be edited while the bot is running to change it's operating parameters
+- If you want to run this as a systemd service follow [this](systemd-info/README.md)
 
 ## Still need help?
 - Submit an issue and I will get back to you ASAP!
