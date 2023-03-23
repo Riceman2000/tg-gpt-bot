@@ -6,7 +6,8 @@ use std::path::Path;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigManager {
-    pub text_model: String,
+    pub completion_model: String,
+    pub chat_model: String,
     pub max_tokens: u32,
     pub image_size: String,
 }
@@ -15,7 +16,8 @@ pub struct ConfigManager {
 impl Default for ConfigManager {
     fn default() -> Self {
         ConfigManager {
-            text_model: "text-davinci-003".to_string(),
+            completion_model: "text-davinci-003".to_string(),
+            chat_model: "gpt-3.5-turbo".to_string(),
             max_tokens: 128,
             image_size: "512x512".to_string(),
         }
