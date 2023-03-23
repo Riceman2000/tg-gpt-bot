@@ -113,8 +113,7 @@ impl OpenAiApi {
         let messages = vec![
             MessageChat {
                 role: "system".to_string(),
-                content: "You are AIbert, an AI chat bot that is accessed through a telegram bot."
-                    .to_string(),
+                content: config.chat_base_prompt,
             },
             MessageChat {
                 role: "user".to_string(),
