@@ -25,8 +25,10 @@ enum Command {
     Source,
     #[command(description = "Test API connection by fetching a list of models from OpenAI")]
     TestApi,
-    #[command(description = "Send a prompt to generate text")]
-    Text(String),
+    #[command(description = "Send a prompt to generate a completion")]
+    Complete(String),
+    #[command(description = "Send a prompt to chat")]
+    Chat(String),
     #[command(description = "Send a prompt to generate an image")]
     Image(String),
 }
@@ -43,8 +45,11 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
         Command::TestApi => {
             responder.test_api().await?;
         }
-        Command::Text(prompt) => {
-            responder.text(prompt).await?;
+        Command::Complete(prompt) => {
+            responder.completion(prompt).await?;
+        }
+        Command::Chat(prompt) => {
+            responder.completion(prompt).await?;
         }
         Command::Image(prompt) => {
             responder.image(prompt).await?;

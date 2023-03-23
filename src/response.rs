@@ -34,9 +34,20 @@ impl Response {
         Ok(())
     }
 
-    pub async fn text(&self, prompt: String) -> ResponseResult<()> {
+    pub async fn completion(&self, prompt: String) -> ResponseResult<()> {
         let open_ai = OpenAiApi::new();
-        let response = match open_ai.text(prompt).await {
+        let response = match open_ai.completion(prompt).await {
+            Ok(resp_string) => resp_string,
+            Err(error) => format!("Error during API call: {error}"),
+        };
+
+        self.bot.send_message(self.msg.chat.id, response).await?;
+        Ok(())
+    }
+
+    pub async fn chat(&self, prompt: String) -> ResponseResult<()> {
+        let open_ai = OpenAiApi::new();
+        let response = match open_ai.chat(prompt).await {
             Ok(resp_string) => resp_string,
             Err(error) => format!("Error during API call: {error}"),
         };

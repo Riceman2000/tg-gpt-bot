@@ -50,7 +50,7 @@ impl OpenAiApi {
         // Send the request and collect the response
         let result = self.client.request(request).await?;
         let response_body = hyper::body::aggregate(result).await?;
-        let json: OpenAiModelList = serde_json::from_reader(response_body.reader())?;
+        let json: ModelList = serde_json::from_reader(response_body.reader())?;
 
         // Format the number of models and return it
         let model_names: Vec<&str> = json.data.iter().map(|m| m.id.as_ref()).collect();
@@ -60,10 +60,11 @@ impl OpenAiApi {
         ))
     }
 
-    pub async fn text(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
-        info!(target: "api_events", "Text gen started.");
-        debug!(target: "api_events", "Text prompt: {}", prompt);
+    pub async fn completion(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
+        info!(target: "api_events", "Completion gen started.");
+        debug!(target: "api_events", "Completion prompt: {}", prompt);
         if prompt.is_empty() {
+            info!(target: "api_events", "No prompt, stopping.");
             return Ok("Prompt is empty, usage: '/text [PROMPT HERE]'".to_string());
         }
 
@@ -71,10 +72,10 @@ impl OpenAiApi {
         let config = ConfigManager::new();
 
         // Form the request struct and convert it to a https body in json
-        let request_data = OpenAiRequestText {
+        let request_data = RequestCompletion {
             prompt,
             max_tokens: config.max_tokens,
-            model: config.text_model,
+            model: config.completion_model,
         };
         let body = Body::from(serde_json::to_vec(&request_data)?);
 
@@ -91,10 +92,57 @@ impl OpenAiApi {
         let response_body = hyper::body::aggregate(result).await?;
 
         // Serialize the response so we can pull out what we want
-        let json: OpenAiResponseText = serde_json::from_reader(response_body.reader())?;
+        let json: ResponseCompletion = serde_json::from_reader(response_body.reader())?;
 
         // Return only the text response
         Ok(json.choices[0].text.clone())
+    }
+
+    pub async fn chat(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
+        info!(target: "api_events", "Chat gen started.");
+        debug!(target: "api_events", "Chat prompt: {}", prompt);
+        if prompt.is_empty() {
+            info!(target: "api_events", "No prompt, stopping.");
+            return Ok("Prompt is empty, usage: '/chat [PROMPT HERE]'".to_string());
+        }
+
+        // Grab info from config file
+        let config = ConfigManager::new();
+
+        // Form the request struct and convert it to a https body in json
+        let messages = vec![
+            MessageChat {
+                role: "system".to_string(),
+                content: config.chat_base_prompt,
+            },
+            MessageChat {
+                role: "user".to_string(),
+                content: prompt,
+            },
+        ];
+        let request_data = RequestChat {
+            model: config.chat_model,
+            messages,
+        };
+        let body = Body::from(serde_json::to_vec(&request_data)?);
+
+        // Make the request
+        let request = Request::builder()
+            .method("POST")
+            .uri(format!("{}/completions", self.uri))
+            .header("Content-Type", "application/json")
+            .header("Authorization", &self.auth_header)
+            .body(body)?;
+
+        // Send the request and get a response
+        let result = self.client.request(request).await?;
+        let response_body = hyper::body::aggregate(result).await?;
+
+        // Serialize the response so we can pull out what we want
+        let json: ResponseChat = serde_json::from_reader(response_body.reader())?;
+
+        // Return only the text response
+        Ok(json.choices[0].message.content.clone())
     }
 
     pub async fn image(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
@@ -128,7 +176,7 @@ impl OpenAiApi {
         let response_body = hyper::body::aggregate(result).await?;
 
         // Serialize the response so we can pull out what we want
-        let json: OpenAiResponseImage = serde_json::from_reader(response_body.reader())?;
+        let json: ResponseImage = serde_json::from_reader(response_body.reader())?;
 
         // If we get multiple urls just return the first one
         let output: Vec<String> = json.data.iter().map(|d| d.url.to_string()).collect();
@@ -136,33 +184,56 @@ impl OpenAiApi {
     }
 }
 
-// Structs for text generation
+// Structs for completion generation
 #[derive(Deserialize, Debug)]
-struct OpenAiChoicesText {
+struct ChoicesCompletion {
     text: String,
 }
 
 #[derive(Deserialize, Debug)]
-struct OpenAiResponseText {
-    choices: Vec<OpenAiChoicesText>,
+struct ResponseCompletion {
+    choices: Vec<ChoicesCompletion>,
 }
 
 #[derive(Serialize, Debug)]
-struct OpenAiRequestText {
+struct RequestCompletion {
     prompt: String,
     max_tokens: u32,
     model: String,
 }
 
+// Structs for chat generation
+#[derive(Deserialize, Debug)]
+struct ResponseChat {
+    choices: Vec<ChoicesChat>,
+}
+
+#[derive(Deserialize, Debug)]
+struct ChoicesChat {
+    message: MessageChat,
+}
+
+#[derive(Serialize, Debug)]
+struct RequestChat {
+    model: String,
+    messages: Vec<MessageChat>,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+struct MessageChat {
+    role: String,
+    content: String,
+}
+
 // Structs for image generation
 #[derive(Deserialize, Debug)]
-struct OpenAiChoicesImage {
+struct ChoicesImage {
     url: String,
 }
 
 #[derive(Deserialize, Debug)]
-struct OpenAiResponseImage {
-    data: Vec<OpenAiChoicesImage>,
+struct ResponseImage {
+    data: Vec<ChoicesImage>,
 }
 
 #[derive(Serialize, Debug)]
@@ -174,11 +245,11 @@ struct OpenAiRequestImage {
 
 // Structs for getting a list of text models
 #[derive(Deserialize, Debug)]
-struct OpenAiModelList {
-    data: Vec<OpenAiModel>,
+struct ModelList {
+    data: Vec<Model>,
 }
 
 #[derive(Deserialize, Debug)]
-struct OpenAiModel {
+struct Model {
     id: String,
 }
