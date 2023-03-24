@@ -1,3 +1,4 @@
+use super::chat_history::*;
 use super::config_manager::*;
 use hyper::{Body, Client, Request};
 use hyper_tls::HttpsConnector;
@@ -104,7 +105,11 @@ impl OpenAiApi {
         Ok(output)
     }
 
-    pub async fn chat(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
+    pub async fn chat(
+        &self,
+        prompt: String,
+        chat_id: String,
+    ) -> Result<String, Box<dyn error::Error>> {
         info!(target: "api_events", "Chat gen started.");
         debug!(target: "api_events", "Chat prompt: {}", prompt);
         if prompt.is_empty() {
@@ -115,17 +120,13 @@ impl OpenAiApi {
         // Grab info from config file
         let config = ConfigManager::new();
 
+        // Get the message history from the user that called the command
+        let mut history = ChatHistory::new(&chat_id);
+        history = history.add_entry(&chat_id, &Role::User, &prompt)?;
+
         // Form the request struct and convert it to a https body in json
-        let messages = vec![
-            MessageChat {
-                role: "system".to_string(),
-                content: config.chat_base_prompt,
-            },
-            MessageChat {
-                role: "user".to_string(),
-                content: prompt,
-            },
-        ];
+        let messages: Vec<MessageChat> = history.messages.clone();
+
         let request_data = RequestChat {
             model: config.chat_model,
             messages,
@@ -148,9 +149,11 @@ impl OpenAiApi {
 
         // Serialize the response so we can pull out what we want
         let json: ResponseChat = serde_json::from_str(&response_string)?;
-
-        // Return only the text response
         let output = json.choices[0].message.content.clone();
+
+        // Add the response back to the history
+        history.add_entry(&chat_id, &Role::Assistant, &output)?;
+
         debug!("Chat output: {}", output);
         Ok(output)
     }
@@ -230,12 +233,6 @@ struct ChoicesChat {
 struct RequestChat {
     model: String,
     messages: Vec<MessageChat>,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-struct MessageChat {
-    role: String,
-    content: String,
 }
 
 // Structs for image generation

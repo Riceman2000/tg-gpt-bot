@@ -47,7 +47,10 @@ impl Response {
 
     pub async fn chat(&self, prompt: String) -> ResponseResult<()> {
         let open_ai = OpenAiApi::new();
-        let response = match open_ai.chat(prompt).await {
+
+        let chat_id = format!("{}", self.msg.chat.id);
+
+        let response = match open_ai.chat(prompt, chat_id).await {
             Ok(resp_string) => resp_string,
             Err(error) => format!("Error during API call: {error}"),
         };
