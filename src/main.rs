@@ -49,7 +49,7 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             responder.completion(prompt).await?;
         }
         Command::Chat(prompt) => {
-            responder.completion(prompt).await?;
+            responder.chat(prompt).await?;
         }
         Command::Image(prompt) => {
             responder.image(prompt).await?;
