@@ -89,10 +89,12 @@ impl OpenAiApi {
 
         // Send the request and get a response
         let result = self.client.request(request).await?;
-        let response_body = hyper::body::aggregate(result).await?;
+        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
+        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
+        debug!("Chat response: {}", response_string);
 
         // Serialize the response so we can pull out what we want
-        let json: ResponseCompletion = serde_json::from_reader(response_body.reader())?;
+        let json: ResponseCompletion = serde_json::from_str(&response_string)?;
 
         // Return only the text response
         Ok(json.choices[0].text.clone())
@@ -129,17 +131,19 @@ impl OpenAiApi {
         // Make the request
         let request = Request::builder()
             .method("POST")
-            .uri(format!("{}/completions", self.uri))
+            .uri(format!("{}/chat/completions", self.uri))
             .header("Content-Type", "application/json")
             .header("Authorization", &self.auth_header)
             .body(body)?;
 
         // Send the request and get a response
         let result = self.client.request(request).await?;
-        let response_body = hyper::body::aggregate(result).await?;
+        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
+        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
+        debug!("Chat response: {}", response_string);
 
         // Serialize the response so we can pull out what we want
-        let json: ResponseChat = serde_json::from_reader(response_body.reader())?;
+        let json: ResponseChat = serde_json::from_str(&response_string)?;
 
         // Return only the text response
         Ok(json.choices[0].message.content.clone())
@@ -173,10 +177,12 @@ impl OpenAiApi {
 
         // Send the request and get a response
         let result = self.client.request(request).await?;
-        let response_body = hyper::body::aggregate(result).await?;
+        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
+        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
+        debug!("Image response: {}", response_string);
 
         // Serialize the response so we can pull out what we want
-        let json: ResponseImage = serde_json::from_reader(response_body.reader())?;
+        let json: ResponseImage = serde_json::from_str(&response_string)?;
 
         // If we get multiple urls just return the first one
         let output: Vec<String> = json.data.iter().map(|d| d.url.to_string()).collect();
