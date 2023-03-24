@@ -1,8 +1,7 @@
 use super::config_manager::*;
-use hyper::body::Buf;
 use hyper::{Body, Client, Request};
 use hyper_tls::HttpsConnector;
-use log::{debug, info};
+use log::{debug, info, trace};
 use serde_derive::{Deserialize, Serialize};
 use std::env;
 use std::error;
@@ -47,17 +46,20 @@ impl OpenAiApi {
             .body(Body::from(""))
             .unwrap();
 
-        // Send the request and collect the response
+        // Send the request and get a response
         let result = self.client.request(request).await?;
-        let response_body = hyper::body::aggregate(result).await?;
-        let json: ModelList = serde_json::from_reader(response_body.reader())?;
+        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
+        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
+        trace!("Connection test response: {}", response_string);
+
+        // Serialize the response so we can pull out what we want
+        let json: ModelList = serde_json::from_str(&response_string)?;
 
         // Format the number of models and return it
         let model_names: Vec<&str> = json.data.iter().map(|m| m.id.as_ref()).collect();
-        Ok(format!(
-            "Connection opened with {} models found!",
-            model_names.len()
-        ))
+        let output = format!("Connection opened with {} models found!", model_names.len());
+        debug!("Connection test output: {}", output);
+        Ok(output)
     }
 
     pub async fn completion(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
@@ -91,13 +93,15 @@ impl OpenAiApi {
         let result = self.client.request(request).await?;
         let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
         let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
-        debug!("Chat response: {}", response_string);
+        trace!("Chat response: {}", response_string);
 
         // Serialize the response so we can pull out what we want
         let json: ResponseCompletion = serde_json::from_str(&response_string)?;
 
         // Return only the text response
-        Ok(json.choices[0].text.clone())
+        let output = json.choices[0].text.clone();
+        debug!("Completion output: {}", output);
+        Ok(output)
     }
 
     pub async fn chat(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
@@ -140,13 +144,15 @@ impl OpenAiApi {
         let result = self.client.request(request).await?;
         let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
         let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
-        debug!("Chat response: {}", response_string);
+        trace!("Chat response: {}", response_string);
 
         // Serialize the response so we can pull out what we want
         let json: ResponseChat = serde_json::from_str(&response_string)?;
 
         // Return only the text response
-        Ok(json.choices[0].message.content.clone())
+        let output = json.choices[0].message.content.clone();
+        debug!("Chat output: {}", output);
+        Ok(output)
     }
 
     pub async fn image(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
@@ -179,13 +185,14 @@ impl OpenAiApi {
         let result = self.client.request(request).await?;
         let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
         let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
-        debug!("Image response: {}", response_string);
+        trace!("Image response: {}", response_string);
 
         // Serialize the response so we can pull out what we want
         let json: ResponseImage = serde_json::from_str(&response_string)?;
 
         // If we get multiple urls just return the first one
         let output: Vec<String> = json.data.iter().map(|d| d.url.to_string()).collect();
+
         Ok(output[0].clone())
     }
 }
