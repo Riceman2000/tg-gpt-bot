@@ -1,8 +1,8 @@
+use super::chat_history::*;
 use super::config_manager::*;
-use hyper::body::Buf;
 use hyper::{Body, Client, Request};
 use hyper_tls::HttpsConnector;
-use log::{debug, info};
+use log::{debug, info, trace};
 use serde_derive::{Deserialize, Serialize};
 use std::env;
 use std::error;
@@ -47,17 +47,20 @@ impl OpenAiApi {
             .body(Body::from(""))
             .unwrap();
 
-        // Send the request and collect the response
+        // Send the request and get a response
         let result = self.client.request(request).await?;
-        let response_body = hyper::body::aggregate(result).await?;
-        let json: ModelList = serde_json::from_reader(response_body.reader())?;
+        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
+        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
+        trace!("Connection test response: {}", response_string);
+
+        // Serialize the response so we can pull out what we want
+        let json: ModelList = serde_json::from_str(&response_string)?;
 
         // Format the number of models and return it
         let model_names: Vec<&str> = json.data.iter().map(|m| m.id.as_ref()).collect();
-        Ok(format!(
-            "Connection opened with {} models found!",
-            model_names.len()
-        ))
+        let output = format!("Connection opened with {} models found!", model_names.len());
+        debug!("Connection test output: {}", output);
+        Ok(output)
     }
 
     pub async fn completion(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
@@ -89,16 +92,24 @@ impl OpenAiApi {
 
         // Send the request and get a response
         let result = self.client.request(request).await?;
-        let response_body = hyper::body::aggregate(result).await?;
+        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
+        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
+        trace!("Chat response: {}", response_string);
 
         // Serialize the response so we can pull out what we want
-        let json: ResponseCompletion = serde_json::from_reader(response_body.reader())?;
+        let json: ResponseCompletion = serde_json::from_str(&response_string)?;
 
         // Return only the text response
-        Ok(json.choices[0].text.clone())
+        let output = json.choices[0].text.clone();
+        debug!("Completion output: {}", output);
+        Ok(output)
     }
 
-    pub async fn chat(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
+    pub async fn chat(
+        &self,
+        prompt: String,
+        chat_id: String,
+    ) -> Result<String, Box<dyn error::Error>> {
         info!(target: "api_events", "Chat gen started.");
         debug!(target: "api_events", "Chat prompt: {}", prompt);
         if prompt.is_empty() {
@@ -109,17 +120,13 @@ impl OpenAiApi {
         // Grab info from config file
         let config = ConfigManager::new();
 
+        // Get the message history from the user that called the command
+        let mut history = ChatHistory::new(&chat_id);
+        history = history.add_entry(&chat_id, &Role::User, &prompt)?;
+
         // Form the request struct and convert it to a https body in json
-        let messages = vec![
-            MessageChat {
-                role: "system".to_string(),
-                content: config.chat_base_prompt,
-            },
-            MessageChat {
-                role: "user".to_string(),
-                content: prompt,
-            },
-        ];
+        let messages: Vec<MessageChat> = history.messages.clone();
+
         let request_data = RequestChat {
             model: config.chat_model,
             messages,
@@ -129,20 +136,42 @@ impl OpenAiApi {
         // Make the request
         let request = Request::builder()
             .method("POST")
-            .uri(format!("{}/completions", self.uri))
+            .uri(format!("{}/chat/completions", self.uri))
             .header("Content-Type", "application/json")
             .header("Authorization", &self.auth_header)
             .body(body)?;
 
         // Send the request and get a response
         let result = self.client.request(request).await?;
-        let response_body = hyper::body::aggregate(result).await?;
+        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
+        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
+        trace!("Chat response: {}", response_string);
 
         // Serialize the response so we can pull out what we want
-        let json: ResponseChat = serde_json::from_reader(response_body.reader())?;
+        let json: ResponseChat = serde_json::from_str(&response_string)?;
+        let output = json.choices[0].message.content.clone();
 
-        // Return only the text response
-        Ok(json.choices[0].message.content.clone())
+        // Add the response back to the history
+        history.add_entry(&chat_id, &Role::Assistant, &output)?;
+
+        debug!("Chat output: {}", output);
+        Ok(output)
+    }
+
+    pub async fn chat_purge(
+        &self,
+        chat_id: String,
+        prompt: String,
+    ) -> Result<String, Box<dyn error::Error>> {
+        info!(target: "api_events", "Chat purge started.");
+        debug!(target: "api_events", "Chat purge prompt: {}", prompt);
+
+        // Grab info from config file
+        let history = ChatHistory::new(&chat_id);
+
+        history.purge(&chat_id, &prompt)?;
+
+        Ok("Chat history purged.".to_string())
     }
 
     pub async fn image(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
@@ -173,13 +202,16 @@ impl OpenAiApi {
 
         // Send the request and get a response
         let result = self.client.request(request).await?;
-        let response_body = hyper::body::aggregate(result).await?;
+        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
+        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
+        trace!("Image response: {}", response_string);
 
         // Serialize the response so we can pull out what we want
-        let json: ResponseImage = serde_json::from_reader(response_body.reader())?;
+        let json: ResponseImage = serde_json::from_str(&response_string)?;
 
         // If we get multiple urls just return the first one
         let output: Vec<String> = json.data.iter().map(|d| d.url.to_string()).collect();
+
         Ok(output[0].clone())
     }
 }
@@ -217,12 +249,6 @@ struct ChoicesChat {
 struct RequestChat {
     model: String,
     messages: Vec<MessageChat>,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-struct MessageChat {
-    role: String,
-    content: String,
 }
 
 // Structs for image generation
