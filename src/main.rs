@@ -27,8 +27,12 @@ enum Command {
     TestApi,
     #[command(description = "Send a prompt to generate a completion")]
     Complete(String),
-    #[command(description = "Send a prompt to chat")]
+    #[command(description = "Chat with Chat-GPT, chats are persistant for each group/DM")]
     Chat(String),
+    #[command(
+        description = "Reset Chat-GPT's conversation. Include a string to set the system prompt."
+    )]
+    ChatPurge(String),
     #[command(description = "Send a prompt to generate an image")]
     Image(String),
 }
@@ -49,7 +53,10 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             responder.completion(prompt).await?;
         }
         Command::Chat(prompt) => {
-            responder.completion(prompt).await?;
+            responder.chat(prompt).await?;
+        }
+        Command::ChatPurge(prompt) => {
+            responder.chat_purge(prompt).await?;
         }
         Command::Image(prompt) => {
             responder.image(prompt).await?;
