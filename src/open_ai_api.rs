@@ -158,6 +158,22 @@ impl OpenAiApi {
         Ok(output)
     }
 
+    pub async fn chat_purge(
+        &self,
+        chat_id: String,
+        prompt: String,
+    ) -> Result<String, Box<dyn error::Error>> {
+        info!(target: "api_events", "Chat purge started.");
+        debug!(target: "api_events", "Chat purge prompt: {}", prompt);
+
+        // Grab info from config file
+        let history = ChatHistory::new(&chat_id);
+
+        history.purge(&chat_id, &prompt)?;
+
+        Ok("Chat history purged.".to_string())
+    }
+
     pub async fn image(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
         info!(target: "api_events", "Image gen started.");
         debug!(target: "api_events", "Image prompt: {}", prompt);

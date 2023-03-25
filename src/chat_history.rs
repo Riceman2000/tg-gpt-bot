@@ -1,4 +1,5 @@
 use super::config_manager::*;
+use log::{debug, error};
 use serde_derive::{Deserialize, Serialize};
 use std::error;
 use std::fs::{create_dir, File, OpenOptions};
@@ -42,7 +43,7 @@ impl ChatHistory {
         let serialized_data = match default_values.read_file(chat_id) {
             Ok(data) => data,
             Err(error) => {
-                println!("Using default values due to error in reading history file: {error}");
+                error!("Using default values due to error in reading history file: {error}");
                 default_values
             }
         };
@@ -57,7 +58,7 @@ impl ChatHistory {
 
     pub fn add_entry(
         mut self,
-        user: &String,
+        chat_id: &String,
         role: &Role,
         content: &String,
     ) -> Result<Self, Box<dyn error::Error>> {
@@ -72,8 +73,33 @@ impl ChatHistory {
             content: content.clone(),
         });
 
-        self.write_file(user)?;
+        self.write_file(chat_id)?;
         Ok(self)
+    }
+
+    pub fn purge(
+        mut self,
+        chat_id: &String,
+        prompt: &String,
+    ) -> Result<Self, Box<dyn error::Error>> {
+        let init_prompt = if prompt.is_empty() {
+            let config = ConfigManager::new();
+            config.chat_base_prompt
+        } else {
+            prompt.clone()
+        };
+
+        debug!("Init prompt: {}", init_prompt);
+
+        self.messages = vec![MessageChat {
+            role: "system".to_string(),
+            content: init_prompt,
+        }];
+
+        debug!("Post-purge struct: {:?}", self);
+
+        self.write_file(chat_id)?;
+        return Ok(self);
     }
 
     fn read_file(&self, chat_id: &String) -> Result<Self, Box<dyn error::Error>> {
@@ -104,6 +130,7 @@ impl ChatHistory {
             .create(true)
             .write(true)
             .append(false)
+            .truncate(true)
             .open(path)?;
 
         file.write_all(json_string.as_bytes())?;

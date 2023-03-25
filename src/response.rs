@@ -59,6 +59,20 @@ impl Response {
         Ok(())
     }
 
+    pub async fn chat_purge(&self, prompt: String) -> ResponseResult<()> {
+        let open_ai = OpenAiApi::new();
+
+        let chat_id = format!("{}", self.msg.chat.id);
+
+        let response = match open_ai.chat_purge(chat_id, prompt).await {
+            Ok(resp_string) => resp_string,
+            Err(error) => format!("Error during API call: {error}"),
+        };
+
+        self.bot.send_message(self.msg.chat.id, response).await?;
+        Ok(())
+    }
+
     pub async fn image(&self, prompt: String) -> ResponseResult<()> {
         let open_ai = OpenAiApi::new();
         let response = match open_ai.image(prompt.clone()).await {
