@@ -1,4 +1,10 @@
+# Session dependant
 /target
-
-.env
+chat-history/**
 config.json
+
+# Secret
+.env
+
+# MacOS
+**/.DS_store
