@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 # Shared 
-tokio = { version =  "1.26", features = ["rt-multi-thread", "macros"] }
+tokio = { version =  "1.27", features = ["rt-multi-thread", "macros"] }
 dotenv = "0.15.0"
 
 # To run the Telegram bot with teloxide
