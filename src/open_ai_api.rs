@@ -290,11 +290,20 @@ mod tests {
 
         pretty_env_logger::init();
 
-        if env::var("OPEN_AI_TOKEN").is_err() {
-            panic!("Environment variable OPEN_AI_TOKEN not found");
+        if env::var("OPEN_AI_TOKEN")
+            .expect("OPEN_AI_TOKEN load failed")
+            .len()
+            == 0
+        {
+            panic!("OPEN_AI_TOKEN is empty");
         }
-        if env::var("OPEN_AI_URI").is_err() {
-            panic!("Environment variable OPEN_AI_URI not found");
+        pretty_env_logger::init();
+        if env::var("OPEN_AI_URI")
+            .expect("OPEN_AI_URI load failed")
+            .len()
+            == 0
+        {
+            panic!("OPEN_AI_URI is empty");
         }
     }
 

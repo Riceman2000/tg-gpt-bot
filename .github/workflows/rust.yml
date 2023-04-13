@@ -22,7 +22,6 @@ jobs:
     env:
       TELOXIDE_TOKEN: ${{ secrets.TELOXIDE_TOKEN }}
       OPEN_AI_TOKEN: ${{ secrets.OPEN_AI_TOKEN }}
-      OPEN_AI_URI: ${{ secrets.OPEN_AI_URI }}
 
     steps:
     - uses: actions/checkout@v3
