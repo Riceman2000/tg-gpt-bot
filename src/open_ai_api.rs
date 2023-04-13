@@ -288,6 +288,8 @@ mod tests {
     fn test_api_env_vars() {
         dotenv::dotenv().ok(); // from .env file
 
+        pretty_env_logger::init();
+
         if env::var("OPEN_AI_TOKEN").is_err() {
             panic!("Environment variable OPEN_AI_TOKEN not found");
         }
