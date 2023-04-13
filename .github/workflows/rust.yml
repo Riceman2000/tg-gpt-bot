@@ -5,6 +5,7 @@ on: [push, pull_request]
 env:
   CARGO_TERM_COLOR: always
   RUST_LOG: trace
+  OPEN_AI_URI: https://api.openai.com/v1
 
 jobs:
   format:
