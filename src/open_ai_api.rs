@@ -306,7 +306,7 @@ mod tests {
     async fn test_test_connection() {
         let openai_api = OpenAiApi::new();
         let response = openai_api.test_connection().await;
-        assert!(response.is_ok());
+        assert!(result.is_ok(), "Error: {:?}", result.err());
     }
 
     #[tokio::test]
@@ -314,7 +314,7 @@ mod tests {
         let openai_api = OpenAiApi::new();
         let prompt = String::from("test prompt");
         let response = openai_api.completion(prompt.clone()).await;
-        assert!(response.is_ok());
+        assert!(result.is_ok(), "Error: {:?}", result.err());
     }
 
     #[tokio::test]
@@ -322,6 +322,7 @@ mod tests {
         let openai_api = OpenAiApi::new();
         let prompt = String::new();
         let response = openai_api.completion(prompt.clone()).await;
+        assert!(result.is_ok(), "Error: {:?}", result.err());
         assert_eq!(
             response.unwrap(),
             "Prompt is empty, usage: '/text [PROMPT HERE]'"
@@ -334,7 +335,7 @@ mod tests {
         let prompt = String::from("test prompt");
         let chat_id = String::from("test_chat_id");
         let response = openai_api.chat(prompt.clone(), chat_id.clone()).await;
-        assert!(response.is_ok());
+        assert!(result.is_ok(), "Error: {:?}", result.err());
     }
 
     #[tokio::test]
@@ -343,6 +344,7 @@ mod tests {
         let prompt = String::new();
         let chat_id = String::from("test_chat_id");
         let response = openai_api.chat(prompt.clone(), chat_id.clone()).await;
+        assert!(result.is_ok(), "Error: {:?}", result.err());
         assert_eq!(
             response.unwrap(),
             "Prompt is empty, usage: '/chat [PROMPT HERE]'"
@@ -355,6 +357,7 @@ mod tests {
         let prompt = String::from("test prompt");
         let chat_id = String::from("test_chat_id");
         let response = openai_api.chat_purge(chat_id.clone(), prompt.clone()).await;
+        assert!(result.is_ok(), "Error: {:?}", result.err());
         assert_eq!(response.unwrap(), "Chat history purged.");
     }
 
@@ -363,7 +366,7 @@ mod tests {
         let openai_api = OpenAiApi::new();
         let prompt = String::from("test prompt");
         let response = openai_api.image(prompt.clone()).await;
-        assert!(response.is_ok());
+        assert!(result.is_ok(), "Error: {:?}", result.err());
     }
 
     #[tokio::test]
@@ -371,6 +374,7 @@ mod tests {
         let openai_api = OpenAiApi::new();
         let prompt = String::new();
         let response = openai_api.image(prompt.clone()).await;
+        assert!(result.is_ok(), "Error: {:?}", result.err());
         assert_eq!(
             response.unwrap(),
             "Prompt is empty, usage: '/image [PROMPT HERE]'"
