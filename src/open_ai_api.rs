@@ -279,3 +279,117 @@ struct ModelList {
 struct Model {
     id: String,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_api_env_vars() {
+        match dotenv::dotenv() {
+            Ok(_) => debug!("Loaded .env file"),
+            Err(error) => debug!("Failed to load .env: {:?}", error),
+        }; // from .env file
+
+        if env::var("OPEN_AI_TOKEN")
+            .expect("OPEN_AI_TOKEN load failed")
+            .len()
+            == 0
+        {
+            panic!("OPEN_AI_TOKEN is empty");
+        }
+        pretty_env_logger::init();
+        if env::var("OPEN_AI_URI")
+            .expect("OPEN_AI_URI load failed")
+            .len()
+            == 0
+        {
+            panic!("OPEN_AI_URI is empty");
+        }
+    }
+
+    #[test]
+    fn test_new_creates_openaiapi() {
+        let openai_api = OpenAiApi::new();
+        assert!(openai_api.uri.len() > 0 && openai_api.auth_header.len() > 0);
+    }
+
+    #[tokio::test]
+    async fn test_test_connection() {
+        let openai_api = OpenAiApi::new();
+        let response = openai_api.test_connection().await;
+        assert!(response.is_ok(), "Error: {:?}", response.err());
+    }
+
+    #[tokio::test]
+    async fn test_completion_prompt_not_empty() {
+        let openai_api = OpenAiApi::new();
+        let prompt = String::from("test prompt");
+        let response = openai_api.completion(prompt.clone()).await;
+        assert!(response.is_ok(), "Error: {:?}", response.err());
+    }
+
+    #[tokio::test]
+    async fn test_completion_prompt_empty() {
+        let openai_api = OpenAiApi::new();
+        let prompt = String::new();
+        let response = openai_api.completion(prompt.clone()).await;
+        assert!(response.is_ok(), "Error: {:?}", response.err());
+        assert_eq!(
+            response.unwrap(),
+            "Prompt is empty, usage: '/text [PROMPT HERE]'"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_chat_prompt_not_empty() {
+        let openai_api = OpenAiApi::new();
+        let prompt = String::from("test prompt");
+        let chat_id = String::from("test_chat_id");
+        let response = openai_api.chat(prompt.clone(), chat_id.clone()).await;
+        assert!(response.is_ok(), "Error: {:?}", response.err());
+    }
+
+    #[tokio::test]
+    async fn test_chat_prompt_empty() {
+        let openai_api = OpenAiApi::new();
+        let prompt = String::new();
+        let chat_id = String::from("test_chat_id");
+        let response = openai_api.chat(prompt.clone(), chat_id.clone()).await;
+        assert!(response.is_ok(), "Error: {:?}", response.err());
+        assert_eq!(
+            response.unwrap(),
+            "Prompt is empty, usage: '/chat [PROMPT HERE]'"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_chat_purge() {
+        let openai_api = OpenAiApi::new();
+        let prompt = String::from("test prompt");
+        let chat_id = String::from("test_chat_id");
+        let response = openai_api.chat_purge(chat_id.clone(), prompt.clone()).await;
+        assert!(response.is_ok(), "Error: {:?}", response.err());
+        assert_eq!(response.unwrap(), "Chat history purged.");
+    }
+
+    #[tokio::test]
+    async fn test_image_prompt_not_empty() {
+        let openai_api = OpenAiApi::new();
+        let prompt = String::from("test prompt");
+        let response = openai_api.image(prompt.clone()).await;
+        assert!(response.is_ok(), "Error: {:?}", response.err());
+    }
+
+    #[tokio::test]
+    async fn test_image_prompt_empty() {
+        let openai_api = OpenAiApi::new();
+        let prompt = String::new();
+        let response = openai_api.image(prompt.clone()).await;
+        assert!(response.is_ok(), "Error: {:?}", response.err());
+        assert_eq!(
+            response.unwrap(),
+            "Prompt is empty, usage: '/image [PROMPT HERE]'"
+        );
+    }
+}
