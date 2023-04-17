@@ -286,9 +286,10 @@ mod tests {
 
     #[test]
     fn test_api_env_vars() {
-        dotenv::dotenv().ok(); // from .env file
-
-        pretty_env_logger::init();
+        match dotenv::dotenv() {
+            Ok(_) => debug!("Loaded .env file"),
+            Err(error) => debug!("Failed to load .env: {:?}", error),
+        }; // from .env file
 
         if env::var("OPEN_AI_TOKEN")
             .expect("OPEN_AI_TOKEN load failed")
