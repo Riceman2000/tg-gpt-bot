@@ -22,7 +22,7 @@ impl Default for OpenAiApi {
 
 impl OpenAiApi {
     pub fn new() -> Self {
-        if !env::var("OPEN_AI_TOKEN").is_ok() || !env::var("OPEN_AI_URI").is_ok() {
+        if env::var("OPEN_AI_TOKEN").is_err() || env::var("OPEN_AI_URI").is_err() {
             dotenv::dotenv().expect("Failed to load env vars for API.");
         }
 
@@ -296,16 +296,14 @@ mod tests {
 
         if env::var("OPEN_AI_TOKEN")
             .expect("OPEN_AI_TOKEN load failed")
-            .len()
-            == 0
+            .is_empty()
         {
             panic!("OPEN_AI_TOKEN is empty");
         }
-        pretty_env_logger::init();
+
         if env::var("OPEN_AI_URI")
             .expect("OPEN_AI_URI load failed")
-            .len()
-            == 0
+            .is_empty()
         {
             panic!("OPEN_AI_URI is empty");
         }
@@ -314,7 +312,7 @@ mod tests {
     #[test]
     fn test_new_creates_openaiapi() {
         let openai_api = OpenAiApi::new();
-        assert!(openai_api.uri.len() > 0 && openai_api.auth_header.len() > 0);
+        assert!(!openai_api.uri.is_empty() && !openai_api.auth_header.is_empty());
     }
 
     #[tokio::test]

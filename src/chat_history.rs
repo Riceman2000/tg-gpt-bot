@@ -48,7 +48,7 @@ impl ChatHistory {
             }
         };
 
-        match serialized_data.write_file(&chat_id) {
+        match serialized_data.write_file(chat_id) {
             Ok(_) => (),
             Err(error) => panic!("Cannot write history data: {error}"),
         };
@@ -60,7 +60,7 @@ impl ChatHistory {
         mut self,
         chat_id: &String,
         role: &Role,
-        content: &String,
+        content: &str,
     ) -> Result<Self, Box<dyn error::Error>> {
         let role_string = match role {
             Role::User => "user".to_string(),
@@ -69,8 +69,8 @@ impl ChatHistory {
         };
 
         self.messages.push(MessageChat {
-            role: role_string.clone(),
-            content: content.clone(),
+            role: role_string,
+            content: content.to_string(),
         });
 
         self.write_file(chat_id)?;
@@ -99,7 +99,7 @@ impl ChatHistory {
         debug!("Post-purge struct: {:?}", self);
 
         self.write_file(chat_id)?;
-        return Ok(self);
+        Ok(self)
     }
 
     fn read_file(&self, chat_id: &String) -> Result<Self, Box<dyn error::Error>> {

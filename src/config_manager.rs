@@ -95,7 +95,7 @@ mod tests {
         fs::write("test_config.json", config_data).unwrap();
         let config = ConfigManager::default();
         let path = Path::new("test_config.json");
-        let result = config.read_file(Some(&path)).unwrap();
+        let result = config.read_file(Some(path)).unwrap();
         assert_eq!(result.chat_base_prompt, "Test prompt");
         fs::remove_file("test_config.json").unwrap();
     }
@@ -111,8 +111,8 @@ mod tests {
         };
 
         let path = Path::new("test_config_write.json");
-        config.write_file(Some(&path)).unwrap();
-        let read_config = config.read_file(Some(&path)).unwrap();
+        config.write_file(Some(path)).unwrap();
+        let read_config = config.read_file(Some(path)).unwrap();
         assert_eq!(read_config.chat_base_prompt, "Test write");
         fs::remove_file("test_config_write.json").unwrap();
     }
@@ -122,7 +122,7 @@ mod tests {
         fs::write("test_malformed_config.json", "invalid json content").unwrap();
         let config = ConfigManager::default();
         let path = Path::new("test_malformed_config.json");
-        assert!(config.read_file(Some(&path)).is_err());
+        assert!(config.read_file(Some(path)).is_err());
         fs::remove_file("test_malformed_config.json").unwrap();
     }
 
@@ -139,7 +139,7 @@ mod tests {
         fs::write("test_incomplete_config.json", config_data).unwrap();
         let config = ConfigManager::default();
         let path = Path::new("test_incomplete_config.json");
-        assert!(config.read_file(Some(&path)).is_err());
+        assert!(config.read_file(Some(path)).is_err());
         fs::remove_file("test_incomplete_config.json").unwrap();
     }
 }
