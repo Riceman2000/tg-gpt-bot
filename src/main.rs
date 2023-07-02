@@ -16,6 +16,8 @@ async fn main() {
     let bot = Bot::from_env();
 
     Command::repl(bot, answer).await;
+
+    println!("Bot closed...")
 }
 
 #[derive(BotCommands, Clone)]

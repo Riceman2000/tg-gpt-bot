@@ -22,13 +22,17 @@ impl Default for OpenAiApi {
 
 impl OpenAiApi {
     pub fn new() -> Self {
+        if env::var("OPEN_AI_TOKEN").is_err() || env::var("OPEN_AI_URI").is_err() {
+            dotenv::dotenv().expect("Failed to load env vars for API.");
+        }
+
         let https: HttpsConnector<hyper::client::HttpConnector> = HttpsConnector::new();
         let client: Client<HttpsConnector<hyper::client::HttpConnector>> =
             Client::builder().build(https);
 
         let uri: String = env::var("OPEN_AI_URI").expect("Open AI URI not defined!");
-
         let token: String = env::var("OPEN_AI_TOKEN").expect("Open AI Token not defined!");
+
         let auth_header: String = format!("Bearer {token}");
 
         Self {
@@ -70,7 +74,6 @@ impl OpenAiApi {
             info!(target: "api_events", "No prompt, stopping.");
             return Ok("Prompt is empty, usage: '/text [PROMPT HERE]'".to_string());
         }
-
         // Grab info from config file
         let config = ConfigManager::new();
 
@@ -293,16 +296,14 @@ mod tests {
 
         if env::var("OPEN_AI_TOKEN")
             .expect("OPEN_AI_TOKEN load failed")
-            .len()
-            == 0
+            .is_empty()
         {
             panic!("OPEN_AI_TOKEN is empty");
         }
-        pretty_env_logger::init();
+
         if env::var("OPEN_AI_URI")
             .expect("OPEN_AI_URI load failed")
-            .len()
-            == 0
+            .is_empty()
         {
             panic!("OPEN_AI_URI is empty");
         }
@@ -311,7 +312,7 @@ mod tests {
     #[test]
     fn test_new_creates_openaiapi() {
         let openai_api = OpenAiApi::new();
-        assert!(openai_api.uri.len() > 0 && openai_api.auth_header.len() > 0);
+        assert!(!openai_api.uri.is_empty() && !openai_api.auth_header.is_empty());
     }
 
     #[tokio::test]
