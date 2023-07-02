@@ -12,9 +12,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: cargo-fmt
-      run: cargo fmt --verbose
+      - uses: actions/checkout@v3
+      - name: cargo-fmt
+        run: cargo fmt --verbose
+
+  clippy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: cargo-clippy
+        run: cargo clippy -- -Dwarnings
 
   test:
     runs-on: ubuntu-latest
@@ -24,19 +32,19 @@ jobs:
       OPEN_AI_TOKEN: ${{ secrets.OPEN_AI_TOKEN }}
 
     steps:
-    - uses: actions/checkout@v3
-    - name: cargo-test
-      run: cargo test
+      - uses: actions/checkout@v3
+      - name: cargo-test
+        run: cargo test
 
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: cargo-build
-      run: cargo build --release
-    - name: artifact-build
-      uses: actions/upload-artifact@v3
-      with:
-        name: tg-gpt-bot
-        path: target/release/tg-gpt-bot
+      - uses: actions/checkout@v3
+      - name: cargo-build
+        run: cargo build --release
+      - name: artifact-build
+        uses: actions/upload-artifact@v3
+        with:
+          name: tg-gpt-bot
+          path: target/release/tg-gpt-bot
