@@ -22,13 +22,17 @@ impl Default for OpenAiApi {
 
 impl OpenAiApi {
     pub fn new() -> Self {
+        if !env::var("OPEN_AI_TOKEN").is_ok() || !env::var("OPEN_AI_URI").is_ok() {
+            dotenv::dotenv().expect("Failed to load env vars for API.");
+        }
+
         let https: HttpsConnector<hyper::client::HttpConnector> = HttpsConnector::new();
         let client: Client<HttpsConnector<hyper::client::HttpConnector>> =
             Client::builder().build(https);
 
         let uri: String = env::var("OPEN_AI_URI").expect("Open AI URI not defined!");
-
         let token: String = env::var("OPEN_AI_TOKEN").expect("Open AI Token not defined!");
+
         let auth_header: String = format!("Bearer {token}");
 
         Self {
@@ -70,7 +74,6 @@ impl OpenAiApi {
             info!(target: "api_events", "No prompt, stopping.");
             return Ok("Prompt is empty, usage: '/text [PROMPT HERE]'".to_string());
         }
-
         // Grab info from config file
         let config = ConfigManager::new();
 
