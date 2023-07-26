@@ -7,18 +7,18 @@ edition = "2021"
 
 [dependencies]
 # Shared
-tokio = { version = "1.29.0", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.29.1", features = ["rt-multi-thread", "macros"] }
 dotenv = "0.15.0"
 
 # To run the Telegram bot with teloxide
 teloxide = { version = "0.12", features = ["macros"] }
 pretty_env_logger = "0.5"
-log = "0.4.17"
+log = "0.4.19"
 
 # Open AI integration via HTTPS REST API
-hyper = { version = "0.14.26", features = ["full"] }
+hyper = { version = "0.14.27", features = ["full"] }
 hyper-tls = "0.5.0"
-serde = "1.0.162"
-serde_derive = "1.0.150"
-serde_json = "1.0.96"
-url = "2.3.1"
+serde = "1.0.175"
+serde_derive = "1.0.175"
+serde_json = "1.0.103"
+url = "2.4.0"
