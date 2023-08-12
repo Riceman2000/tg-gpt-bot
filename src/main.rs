@@ -36,9 +36,7 @@ enum Command {
     Complete(String),
     #[command(description = "Chat with Chat-GPT, chats are persistant for each group/DM")]
     Chat(String),
-    #[command(
-        description = "Reset Chat-GPT's conversation. Include a string to set the system prompt."
-    )]
+    #[command(description = "Reset Chat-GPT's conversation. Optionally include a system prompt.")]
     ChatPurge(String),
     #[command(description = "Send a prompt to generate an image")]
     Image(String),
