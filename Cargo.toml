@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 # Shared
-tokio = { version = "1.30.0", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.31.0", features = ["rt-multi-thread", "macros"] }
 dotenv = "0.15.0"
 anyhow = "1.0.72"
 
