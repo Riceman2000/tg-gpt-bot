@@ -1,7 +1,7 @@
 use super::config_manager::*;
+use anyhow::Result;
 use log::{debug, error};
 use serde_derive::{Deserialize, Serialize};
-use std::error;
 use std::fs::{create_dir, File, OpenOptions};
 use std::io::prelude::*;
 use std::path::Path;
@@ -56,12 +56,7 @@ impl ChatHistory {
         serialized_data
     }
 
-    pub fn add_entry(
-        mut self,
-        chat_id: &String,
-        role: &Role,
-        content: &str,
-    ) -> Result<Self, Box<dyn error::Error>> {
+    pub fn add_entry(mut self, chat_id: &String, role: &Role, content: &str) -> Result<Self> {
         let role_string = match role {
             Role::User => "user".to_string(),
             Role::System => "system".to_string(),
@@ -77,11 +72,7 @@ impl ChatHistory {
         Ok(self)
     }
 
-    pub fn purge(
-        mut self,
-        chat_id: &String,
-        prompt: &String,
-    ) -> Result<Self, Box<dyn error::Error>> {
+    pub fn purge(mut self, chat_id: &String, prompt: &String) -> Result<Self> {
         let init_prompt = if prompt.is_empty() {
             let config = ConfigManager::new();
             config.chat_base_prompt
@@ -102,7 +93,7 @@ impl ChatHistory {
         Ok(self)
     }
 
-    fn read_file(&self, chat_id: &String) -> Result<Self, Box<dyn error::Error>> {
+    fn read_file(&self, chat_id: &String) -> Result<Self> {
         // If the chat history directory does not exist make it
         if !Path::new("./chat-history").is_dir() {
             create_dir("./chat-history")?;
@@ -120,7 +111,7 @@ impl ChatHistory {
         Ok(serialized_data)
     }
 
-    fn write_file(&self, chat_id: &String) -> Result<(), Box<dyn error::Error>> {
+    fn write_file(&self, chat_id: &String) -> Result<()> {
         let user_history_file = format!("chat-history/{}-history.json", chat_id);
         let path = Path::new(&user_history_file);
 

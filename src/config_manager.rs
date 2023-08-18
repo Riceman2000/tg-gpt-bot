@@ -1,5 +1,5 @@
+use anyhow::Result;
 use serde_derive::{Deserialize, Serialize};
-use std::error;
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 use std::path::Path;
@@ -46,7 +46,7 @@ impl ConfigManager {
         serialized_data
     }
 
-    pub fn read_file(&self, path_in: Option<&Path>) -> Result<Self, Box<dyn error::Error>> {
+    pub fn read_file(&self, path_in: Option<&Path>) -> Result<Self> {
         let path = path_in.unwrap_or(Path::new("config.json"));
 
         let mut file = File::open(path)?;
@@ -59,7 +59,7 @@ impl ConfigManager {
         Ok(serialized_data)
     }
 
-    pub fn write_file(&self, path_in: Option<&Path>) -> Result<(), Box<dyn error::Error>> {
+    pub fn write_file(&self, path_in: Option<&Path>) -> Result<()> {
         let path = path_in.unwrap_or(Path::new("config.json"));
 
         let json_string = serde_json::to_string_pretty(&self)?;

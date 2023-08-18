@@ -1,11 +1,11 @@
 use super::chat_history::*;
 use super::config_manager::*;
+use anyhow::Result;
 use hyper::{Body, Client, Request};
 use hyper_tls::HttpsConnector;
 use log::{debug, info, trace};
 use serde_derive::{Deserialize, Serialize};
 use std::env;
-use std::error;
 
 pub struct OpenAiApi {
     client: Client<HttpsConnector<hyper::client::HttpConnector>>,
@@ -42,23 +42,18 @@ impl OpenAiApi {
         }
     }
 
-    pub async fn test_connection(&self) -> Result<String, Box<dyn error::Error>> {
+    pub async fn test_connection(&self) -> Result<String> {
         info!(target: "api_events", "Test connection started.");
         // Ask for list of models to check auth
-        let request = Request::builder()
-            .uri(format!("{}/models", self.uri))
-            .header("Authorization", &self.auth_header)
-            .body(Body::from(""))
-            .unwrap();
 
-        // Send the request and get a response
-        let result = self.client.request(request).await?;
-        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
-        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
-        trace!("Connection test response: {}", response_string);
-
-        // Serialize the response so we can pull out what we want
-        let json: ModelList = serde_json::from_str(&response_string)?;
+        let client = reqwest::Client::new();
+        let json = client
+            .get(format!("{}/models", self.uri))
+            .header(reqwest::header::AUTHORIZATION, &self.auth_header)
+            .send()
+            .await?
+            .json::<ModelList>()
+            .await?;
 
         // Format the number of models and return it
         let model_names: Vec<&str> = json.data.iter().map(|m| m.id.as_ref()).collect();
@@ -67,7 +62,7 @@ impl OpenAiApi {
         Ok(output)
     }
 
-    pub async fn completion(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
+    pub async fn completion(&self, prompt: String) -> Result<String> {
         info!(target: "api_events", "Completion gen started.");
         debug!(target: "api_events", "Completion prompt: {}", prompt);
         if prompt.is_empty() {
@@ -108,11 +103,7 @@ impl OpenAiApi {
         Ok(output)
     }
 
-    pub async fn chat(
-        &self,
-        prompt: String,
-        chat_id: String,
-    ) -> Result<String, Box<dyn error::Error>> {
+    pub async fn chat(&self, prompt: String, chat_id: String) -> Result<String> {
         info!(target: "api_events", "Chat gen started.");
         debug!(target: "api_events", "Chat prompt: {}", prompt);
         if prompt.is_empty() {
@@ -161,11 +152,7 @@ impl OpenAiApi {
         Ok(output)
     }
 
-    pub async fn chat_purge(
-        &self,
-        chat_id: String,
-        prompt: String,
-    ) -> Result<String, Box<dyn error::Error>> {
+    pub async fn chat_purge(&self, chat_id: String, prompt: String) -> Result<String> {
         info!(target: "api_events", "Chat purge started.");
         debug!(target: "api_events", "Chat purge prompt: {}", prompt);
 
@@ -177,7 +164,7 @@ impl OpenAiApi {
         Ok("Chat history purged.".to_string())
     }
 
-    pub async fn image(&self, prompt: String) -> Result<String, Box<dyn error::Error>> {
+    pub async fn image(&self, prompt: String) -> Result<String> {
         info!(target: "api_events", "Image gen started.");
         debug!(target: "api_events", "Image prompt: {}", prompt);
         if prompt.is_empty() {
