@@ -1,6 +1,6 @@
 use std::env;
 use teloxide::{prelude::*, utils::command::BotCommands};
-use tg_gpt_bot::*;
+use tg_gpt_bot::response;
 
 #[tokio::main]
 async fn main() {
@@ -9,15 +9,16 @@ async fn main() {
     pretty_env_logger::init();
     log::info!("Starting command bot...");
 
-    if env::var("TELOXIDE_TOKEN").is_err() {
-        panic!("Environment variable TELOXIDE_TOKEN not found");
-    }
+    assert!(
+        env::var("TELOXIDE_TOKEN").is_ok(),
+        "Environment variable TELOXIDE_TOKEN not found"
+    );
 
     let bot = Bot::from_env();
 
     Command::repl(bot, answer).await;
 
-    println!("Bot closed...")
+    println!("Bot closed...");
 }
 
 #[derive(BotCommands, Clone)]

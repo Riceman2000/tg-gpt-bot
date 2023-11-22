@@ -44,6 +44,9 @@ impl Default for ChatHistory {
 }
 
 impl ChatHistory {
+    /// Process a new message, will create a new chat or add to an existing one
+    /// # Errors
+    /// OS file write errors
     pub fn new(chat_id: &str) -> Result<Self> {
         let serialized_data = match ChatHistory::read_file(chat_id) {
             Ok(data) => data,
@@ -58,6 +61,10 @@ impl ChatHistory {
         Ok(serialized_data)
     }
 
+    /// Add an entry to the selected `chat_id` with the given role
+    /// Also writes to the history file
+    /// # Errors
+    /// OS file write errors
     pub fn add_entry(mut self, chat_id: &str, role: &Role, content: &str) -> Result<Self> {
         let role_string = match role {
             Role::User => "user".to_string(),
@@ -74,12 +81,16 @@ impl ChatHistory {
         Ok(self)
     }
 
+    /// Wipes a chat history, if the user provides a system prompt it will be used otherwise it
+    /// will use the system prompt in the system config file
+    /// # Errors
+    /// OS file write errors
     pub fn purge(mut self, chat_id: &str, prompt: &str) -> Result<Self> {
-        let config = ConfigManager::new()?;
         let init_prompt = if prompt.is_empty() {
-            &config.chat_base_prompt
+            let config = ConfigManager::new()?;
+            config.chat_base_prompt
         } else {
-            prompt
+            prompt.to_string()
         };
 
         debug!("Init prompt: {}", init_prompt);

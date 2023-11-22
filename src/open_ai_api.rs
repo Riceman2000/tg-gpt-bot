@@ -6,13 +6,9 @@ use std::env;
 
 use anyhow::{anyhow, Result};
 
-use hyper::{Body, Client, Request};
-use hyper_tls::HttpsConnector;
-
 use serde_derive::{Deserialize, Serialize};
 
 pub struct OpenAiApi {
-    client: Client<HttpsConnector<hyper::client::HttpConnector>>,
     uri: String,
     auth_header: String,
 }
@@ -31,20 +27,12 @@ impl OpenAiApi {
             dotenv::dotenv().expect("Failed to load env vars for API.");
         }
 
-        let https: HttpsConnector<hyper::client::HttpConnector> = HttpsConnector::new();
-        let client: Client<HttpsConnector<hyper::client::HttpConnector>> =
-            Client::builder().build(https);
-
         let uri: String = env::var("OPEN_AI_URI").expect("Open AI URI not defined!");
         let token: String = env::var("OPEN_AI_TOKEN").expect("Open AI Token not defined!");
 
         let auth_header: String = format!("Bearer {token}");
 
-        Self {
-            client,
-            uri,
-            auth_header,
-        }
+        Self { uri, auth_header }
     }
 
     async fn openai_post(&self, endpoint: &str, body: &str) -> Result<String> {
@@ -60,6 +48,9 @@ impl OpenAiApi {
             .await?)
     }
 
+    /// Request a list of models from the API
+    /// # Errors
+    /// Network failure or response deserialization failure
     pub async fn test_connection(&self) -> Result<String> {
         info!(target: "api_events", "Test connection started.");
         // Ask for list of models to check auth
@@ -80,6 +71,9 @@ impl OpenAiApi {
         Ok(output)
     }
 
+    /// Text completion prompt from the API
+    /// # Errors
+    /// Network failure or response deserialization failure
     pub async fn completion(&self, prompt: String) -> Result<String> {
         info!(target: "api_events", "Completion gen started.");
         debug!(target: "api_events", "Completion prompt: {}", prompt);
@@ -108,6 +102,9 @@ impl OpenAiApi {
         Ok(output)
     }
 
+    /// Chat prompt from the API
+    /// # Errors
+    /// Network failure or response deserialization failure
     pub async fn chat(&self, prompt: String, chat_id: String) -> Result<String> {
         info!(target: "api_events", "Chat gen started.");
         debug!(target: "api_events", "Chat prompt: {}", prompt);
@@ -130,24 +127,13 @@ impl OpenAiApi {
             messages,
         };
 
-        let body = Body::from(serde_json::to_vec(&request_data)?);
-
         // Make the request
-        let request = Request::builder()
-            .method("POST")
-            .uri(format!("{}/chat/completions", self.uri))
-            .header("Content-Type", "application/json")
-            .header("Authorization", &self.auth_header)
-            .body(body)?;
+        let body = serde_json::to_string(&request_data)?;
+        trace!("Chat request body: {body}");
+        let response = self.openai_post("chat/completions", &body).await?;
+        trace!("Chat response: {response}");
+        let json: ResponseChat = serde_json::from_str(&response)?;
 
-        // Send the request and get a response
-        let result = self.client.request(request).await?;
-        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
-        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
-        trace!("Chat response: {}", response_string);
-
-        // Serialize the response so we can pull out what we want
-        let json: ResponseChat = serde_json::from_str(&response_string)?;
         let output = json.choices[0].message.content.clone();
 
         // Add the response back to the history
@@ -157,21 +143,28 @@ impl OpenAiApi {
         Ok(output)
     }
 
+    /// Clear the chat history for a given chat ID.
+    /// Does not reach out to the API
+    /// # Errors
+    /// OS file errors
     pub fn chat_purge(&self, chat_id: &str, prompt: &str) -> Result<String> {
         info!(target: "api_events", "Chat purge started.");
         debug!(target: "api_events", "Chat purge prompt: {}", prompt);
 
         // Grab info from config file
-        let history = ChatHistory::new(&chat_id)?;
-        history.purge(&chat_id, &prompt)?;
+        let history = ChatHistory::new(chat_id)?;
+        history.purge(chat_id, prompt)?;
 
         if prompt.is_empty() {
             Ok("Chat history purged without a custom prompt.".to_string())
         } else {
-            Ok(format!("Chat history purged with prompt '{}'.", prompt))
+            Ok(format!("Chat history purged with prompt '{prompt}'."))
         }
     }
 
+    /// Request an image URL from a prompt from the API
+    /// # Errors
+    /// OS file errors
     pub async fn image(&self, prompt: String) -> Result<String> {
         info!(target: "api_events", "Image gen started.");
         debug!(target: "api_events", "Image prompt: {}", prompt);
@@ -181,30 +174,17 @@ impl OpenAiApi {
 
         let config = ConfigManager::new()?;
 
-        // Form the request struct and convert it to a https body in json
         let request_data = OpenAiRequestImage {
             prompt,
             n: 1,
             size: config.image_size,
         };
-        let body = Body::from(serde_json::to_vec(&request_data)?);
-
         // Make the request
-        let request = Request::builder()
-            .method("POST")
-            .uri(format!("{}/images/generations", self.uri))
-            .header("Content-Type", "application/json")
-            .header("Authorization", &self.auth_header)
-            .body(body)?;
-
-        // Send the request and get a response
-        let result = self.client.request(request).await?;
-        let body_bytes = hyper::body::to_bytes(result.into_body()).await?;
-        let response_string = String::from_utf8(body_bytes.to_vec()).unwrap();
-        trace!("Image response: {}", response_string);
-
-        // Serialize the response so we can pull out what we want
-        let json: ResponseImage = serde_json::from_str(&response_string)?;
+        let body = serde_json::to_string(&request_data)?;
+        trace!("Chat request body: {body}");
+        let response = self.openai_post("images/generations", &body).await?;
+        trace!("Chat response: {response}");
+        let json: ResponseImage = serde_json::from_str(&response)?;
 
         // If we get multiple urls just return the first one
         match json.data.iter().map(|d| d.url.to_string()).next() {
@@ -286,7 +266,7 @@ mod tests {
     fn test_api_env_vars() {
         match dotenv::dotenv() {
             Ok(_) => debug!("Loaded .env file"),
-            Err(error) => panic!("Failed to load .env: {:?}", error),
+            Err(e) => panic!("Failed to load .env: {e}"),
         }; // from .env file
 
         if env::var("OPEN_AI_TOKEN")

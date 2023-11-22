@@ -1,4 +1,5 @@
 use anyhow::Result;
+use log::warn;
 use serde_derive::{Deserialize, Serialize};
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
@@ -27,23 +28,23 @@ impl Default for ConfigManager {
 }
 
 impl ConfigManager {
+    /// Grab values from the system config file
+    /// # Errors
+    /// If there is an OS read and write error
     pub fn new() -> Result<Self> {
-        let default_values = ConfigManager::default();
-
-        let serialized_data = match default_values.read_file(None) {
+        let serialized_data = match Self::read_file(None) {
             Ok(data) => data,
             Err(error) => {
-                println!("Using default values due to error in reading config file: {error}");
-                default_values
+                warn!("Using default values due to error in reading config file: {error}");
+                ConfigManager::default().write_file(None)?;
+                ConfigManager::default()
             }
         };
-
-        serialized_data.write_file(None)?;
 
         Ok(serialized_data)
     }
 
-    pub fn read_file(&self, path_in: Option<&Path>) -> Result<Self> {
+    fn read_file(path_in: Option<&Path>) -> Result<Self> {
         let path = path_in.unwrap_or(Path::new("config.json"));
 
         let mut file = File::open(path)?;
@@ -56,7 +57,7 @@ impl ConfigManager {
         Ok(serialized_data)
     }
 
-    pub fn write_file(&self, path_in: Option<&Path>) -> Result<()> {
+    fn write_file(&self, path_in: Option<&Path>) -> Result<()> {
         let path = path_in.unwrap_or(Path::new("config.json"));
 
         let json_string = serde_json::to_string_pretty(&self)?;
@@ -90,9 +91,8 @@ mod tests {
         }
         "#;
         fs::write("test_config.json", config_data).unwrap();
-        let config = ConfigManager::default();
         let path = Path::new("test_config.json");
-        let result = config.read_file(Some(path)).unwrap();
+        let result = ConfigManager::read_file(Some(path)).unwrap();
         assert_eq!(result.chat_base_prompt, "Test prompt");
         fs::remove_file("test_config.json").unwrap();
     }
@@ -109,7 +109,7 @@ mod tests {
 
         let path = Path::new("test_config_write.json");
         config.write_file(Some(path)).unwrap();
-        let read_config = config.read_file(Some(path)).unwrap();
+        let read_config = ConfigManager::read_file(Some(path)).unwrap();
         assert_eq!(read_config.chat_base_prompt, "Test write");
         fs::remove_file("test_config_write.json").unwrap();
     }
@@ -117,9 +117,8 @@ mod tests {
     #[test]
     fn test_read_file_invalid_file() {
         fs::write("test_malformed_config.json", "invalid json content").unwrap();
-        let config = ConfigManager::default();
         let path = Path::new("test_malformed_config.json");
-        assert!(config.read_file(Some(path)).is_err());
+        assert!(ConfigManager::read_file(Some(path)).is_err());
         fs::remove_file("test_malformed_config.json").unwrap();
     }
 
@@ -134,9 +133,8 @@ mod tests {
         }
         "#;
         fs::write("test_incomplete_config.json", config_data).unwrap();
-        let config = ConfigManager::default();
         let path = Path::new("test_incomplete_config.json");
-        assert!(config.read_file(Some(path)).is_err());
+        assert!(ConfigManager::read_file(Some(path)).is_err());
         fs::remove_file("test_incomplete_config.json").unwrap();
     }
 }
