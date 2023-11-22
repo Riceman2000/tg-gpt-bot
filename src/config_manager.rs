@@ -27,7 +27,7 @@ impl Default for ConfigManager {
 }
 
 impl ConfigManager {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self> {
         let default_values = ConfigManager::default();
 
         let serialized_data = match default_values.read_file(None) {
@@ -38,12 +38,9 @@ impl ConfigManager {
             }
         };
 
-        match serialized_data.write_file(None) {
-            Ok(_) => (),
-            Err(error) => panic!("Cannot write config data: {error}"),
-        };
+        serialized_data.write_file(None)?;
 
-        serialized_data
+        Ok(serialized_data)
     }
 
     pub fn read_file(&self, path_in: Option<&Path>) -> Result<Self> {

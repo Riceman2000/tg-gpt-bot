@@ -1,5 +1,5 @@
 # tg-gpt-bot
-Telegram bot written in Rust to access the GPT API.
+Telegram bot written in Rust to access the GPT API. Written as one of my first Rust projects and still has some issues from someone that was not experienced with the language, any improvements you have would be appreciated!
 
 ## Core components
 - [Teloxide](https://github.com/teloxide/teloxide)

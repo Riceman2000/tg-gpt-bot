@@ -64,7 +64,7 @@ impl Response {
 
         let chat_id = format!("{}", self.msg.chat.id);
 
-        let response = match open_ai.chat_purge(chat_id, prompt).await {
+        let response = match open_ai.chat_purge(&chat_id, &prompt) {
             Ok(resp_string) => resp_string,
             Err(error) => format!("Error during API call: {error}"),
         };
