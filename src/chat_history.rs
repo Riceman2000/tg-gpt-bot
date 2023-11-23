@@ -1,7 +1,11 @@
-use super::config_manager::*;
+use super::config_manager::ConfigManager;
+
 use anyhow::Result;
-use log::{debug, error};
+
+use log::{debug, warn};
+
 use serde_derive::{Deserialize, Serialize};
+
 use std::fs::{create_dir, File, OpenOptions};
 use std::io::prelude::*;
 use std::path::Path;
@@ -26,7 +30,10 @@ pub enum Role {
 // Default config values
 impl Default for ChatHistory {
     fn default() -> Self {
-        let config = ConfigManager::new();
+        let config = match ConfigManager::new() {
+            Ok(c) => c,
+            Err(e) => panic!("Failed to get config with {e}"),
+        };
         ChatHistory {
             messages: vec![MessageChat {
                 role: "system".to_string(),
@@ -37,26 +44,28 @@ impl Default for ChatHistory {
 }
 
 impl ChatHistory {
-    pub fn new(chat_id: &String) -> Self {
-        let default_values = ChatHistory::default();
-
-        let serialized_data = match default_values.read_file(chat_id) {
+    /// Process a new message, will create a new chat or add to an existing one
+    /// # Errors
+    /// OS file write errors
+    pub fn new(chat_id: &str) -> Result<Self> {
+        let serialized_data = match ChatHistory::read_file(chat_id) {
             Ok(data) => data,
             Err(error) => {
-                error!("Using default values due to error in reading history file: {error}");
-                default_values
+                warn!("Using default values due to error in reading history file: {error}");
+                ChatHistory::default()
             }
         };
 
-        match serialized_data.write_file(chat_id) {
-            Ok(_) => (),
-            Err(error) => panic!("Cannot write history data: {error}"),
-        };
+        serialized_data.write_file(chat_id)?;
 
-        serialized_data
+        Ok(serialized_data)
     }
 
-    pub fn add_entry(mut self, chat_id: &String, role: &Role, content: &str) -> Result<Self> {
+    /// Add an entry to the selected `chat_id` with the given role
+    /// Also writes to the history file
+    /// # Errors
+    /// OS file write errors
+    pub fn add_entry(mut self, chat_id: &str, role: &Role, content: &str) -> Result<Self> {
         let role_string = match role {
             Role::User => "user".to_string(),
             Role::System => "system".to_string(),
@@ -72,19 +81,23 @@ impl ChatHistory {
         Ok(self)
     }
 
-    pub fn purge(mut self, chat_id: &String, prompt: &String) -> Result<Self> {
+    /// Wipes a chat history, if the user provides a system prompt it will be used otherwise it
+    /// will use the system prompt in the system config file
+    /// # Errors
+    /// OS file write errors
+    pub fn purge(mut self, chat_id: &str, prompt: &str) -> Result<Self> {
         let init_prompt = if prompt.is_empty() {
-            let config = ConfigManager::new();
+            let config = ConfigManager::new()?;
             config.chat_base_prompt
         } else {
-            prompt.clone()
+            prompt.to_string()
         };
 
         debug!("Init prompt: {}", init_prompt);
 
         self.messages = vec![MessageChat {
             role: "system".to_string(),
-            content: init_prompt,
+            content: init_prompt.to_string(),
         }];
 
         debug!("Post-purge struct: {:?}", self);
@@ -93,12 +106,12 @@ impl ChatHistory {
         Ok(self)
     }
 
-    fn read_file(&self, chat_id: &String) -> Result<Self> {
+    fn read_file(chat_id: &str) -> Result<Self> {
         // If the chat history directory does not exist make it
         if !Path::new("./chat-history").is_dir() {
             create_dir("./chat-history")?;
         }
-        let user_history_file = format!("chat-history/{}-history.json", chat_id);
+        let user_history_file = format!("chat-history/{chat_id}-history.json");
         let path = Path::new(&user_history_file);
 
         let mut file = File::open(path)?;
@@ -111,8 +124,8 @@ impl ChatHistory {
         Ok(serialized_data)
     }
 
-    fn write_file(&self, chat_id: &String) -> Result<()> {
-        let user_history_file = format!("chat-history/{}-history.json", chat_id);
+    fn write_file(&self, chat_id: &str) -> Result<()> {
+        let user_history_file = format!("chat-history/{chat_id}-history.json");
         let path = Path::new(&user_history_file);
 
         let json_string = serde_json::to_string_pretty(&self)?;
