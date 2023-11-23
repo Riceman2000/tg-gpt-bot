@@ -264,9 +264,10 @@ mod tests {
 
     #[test]
     fn test_api_env_vars() {
+        // This is not always a fail state, sometimes env vars could come from somewhere else
         match dotenv::dotenv() {
             Ok(_) => debug!("Loaded .env file"),
-            Err(e) => panic!("Failed to load .env: {e}"),
+            Err(e) => debug!("Failed to load .env: {e}"),
         }; // from .env file
 
         if env::var("OPEN_AI_TOKEN")
