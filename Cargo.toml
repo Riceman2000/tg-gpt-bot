@@ -9,7 +9,7 @@ edition = "2021"
 # Shared
 tokio = { version = "1.34.0", features = ["rt-multi-thread", "macros"] }
 dotenv = "0.15.0"
-anyhow = "1.0.75"
+anyhow = "1.0.78"
 
 # To run the Telegram bot with teloxide
 teloxide = { version = "0.12", features = ["macros"] }
