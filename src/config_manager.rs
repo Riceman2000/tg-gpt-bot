@@ -7,7 +7,6 @@ use std::path::Path;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigManager {
-    pub completion_model: String,
     pub chat_model: String,
     pub chat_base_prompt: String,
     pub max_tokens: u32,
@@ -18,8 +17,7 @@ pub struct ConfigManager {
 impl Default for ConfigManager {
     fn default() -> Self {
         ConfigManager {
-            completion_model: "text-davinci-003".to_string(),
-            chat_model: "gpt-3.5-turbo".to_string(),
+            chat_model: "gpt-4".to_string(),
             chat_base_prompt: "You are an assistant that is built into a Telegram bot. Only respond with plaintext and if you are writing code begin with CODE-START and end with CODE-END.".to_string(),
             max_tokens: 1024,
             image_size: "512x512".to_string(),
@@ -83,7 +81,6 @@ mod tests {
     fn test_read_file_valid_file() {
         let config_data = r#"
         {
-            "completion_model": "text-davinci-003",
             "chat_model": "gpt-3.5-turbo",
             "chat_base_prompt": "Test prompt",
             "max_tokens": 1024,
@@ -100,7 +97,6 @@ mod tests {
     #[test]
     fn test_write_file() {
         let config = ConfigManager {
-            completion_model: "text-davinci-003".to_string(),
             chat_model: "gpt-3.5-turbo".to_string(),
             chat_base_prompt: "Test write".to_string(),
             max_tokens: 1024,
@@ -126,7 +122,6 @@ mod tests {
     fn test_read_file_incomplete_structure() {
         let config_data = r#"
         {
-            "completion_model": "text-davinci-003",
             "chat_model": "gpt-3.5-turbo",
             "max_tokens": 1024,
             "image_size": "512x512"

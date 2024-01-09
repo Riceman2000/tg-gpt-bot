@@ -33,8 +33,6 @@ enum Command {
     Source,
     #[command(description = "Test API connection by fetching a list of models from OpenAI")]
     TestApi,
-    #[command(description = "Send a prompt to generate a completion")]
-    Complete(String),
     #[command(description = "Chat with Chat-GPT, chats are persistant for each group/DM")]
     Chat(String),
     #[command(description = "Reset Chat-GPT's conversation. Optionally include a system prompt.")]
@@ -54,9 +52,6 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
         }
         Command::TestApi => {
             responder.test_api().await?;
-        }
-        Command::Complete(prompt) => {
-            responder.completion(prompt).await?;
         }
         Command::Chat(prompt) => {
             responder.chat(prompt).await?;

@@ -43,20 +43,6 @@ impl Response {
         Ok(())
     }
 
-    /// Generate a text completion
-    /// # Errors
-    /// Telegram API failure
-    pub async fn completion(&self, prompt: String) -> ResponseResult<()> {
-        let open_ai = OpenAiApi::new();
-        let response = match open_ai.completion(prompt).await {
-            Ok(resp_string) => resp_string,
-            Err(error) => format!("Error during API call: {error}"),
-        };
-
-        self.bot.send_message(self.msg.chat.id, response).await?;
-        Ok(())
-    }
-
     /// Generate a chat response
     /// # Errors
     /// Telegram API failure

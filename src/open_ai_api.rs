@@ -71,37 +71,6 @@ impl OpenAiApi {
         Ok(output)
     }
 
-    /// Text completion prompt from the API
-    /// # Errors
-    /// Network failure or response deserialization failure
-    pub async fn completion(&self, prompt: String) -> Result<String> {
-        info!(target: "api_events", "Completion gen started.");
-        debug!(target: "api_events", "Completion prompt: {}", prompt);
-        if prompt.is_empty() {
-            info!(target: "api_events", "No prompt, stopping.");
-            return Ok("Prompt is empty, usage: '/text [PROMPT HERE]'".to_string());
-        }
-        // Grab info from config file
-        let config = ConfigManager::new()?;
-
-        let request_data = RequestCompletion {
-            prompt,
-            max_tokens: config.max_tokens,
-            model: config.completion_model,
-        };
-
-        let body = serde_json::to_string(&request_data)?;
-        trace!("Body: {body}");
-        let response = self.openai_post("completions", &body).await?;
-        trace!("Completion response: {response}");
-        let json: ResponseCompletion = serde_json::from_str(&response)?;
-
-        // Return only the first response
-        let output = json.choices[0].text.clone();
-        debug!("Completion output: {}", output);
-        Ok(output)
-    }
-
     /// Chat prompt from the API
     /// # Errors
     /// Network failure or response deserialization failure
@@ -194,24 +163,6 @@ impl OpenAiApi {
     }
 }
 
-// Structs for completion generation
-#[derive(Deserialize, Debug)]
-struct ChoicesCompletion {
-    text: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct ResponseCompletion {
-    choices: Vec<ChoicesCompletion>,
-}
-
-#[derive(Serialize, Debug)]
-struct RequestCompletion {
-    prompt: String,
-    max_tokens: u32,
-    model: String,
-}
-
 // Structs for chat generation
 #[derive(Deserialize, Debug)]
 struct ResponseChat {
@@ -296,22 +247,6 @@ mod tests {
         let openai_api = OpenAiApi::new();
         let response = openai_api.test_connection().await.unwrap();
         assert!(response.starts_with("Connection opened with"));
-    }
-
-    #[tokio::test]
-    async fn test_completion_prompt_not_empty() {
-        let openai_api = OpenAiApi::new();
-        let prompt = String::from("test prompt");
-        let response = openai_api.completion(prompt.clone()).await;
-        assert!(response.is_ok(), "Error: {:?}", response.err());
-    }
-
-    #[tokio::test]
-    async fn test_completion_prompt_empty() {
-        let openai_api = OpenAiApi::new();
-        let prompt = String::new();
-        let response = openai_api.completion(prompt.clone()).await.unwrap();
-        assert_eq!(response, "Prompt is empty, usage: '/text [PROMPT HERE]'");
     }
 
     #[tokio::test]
