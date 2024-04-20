@@ -64,6 +64,7 @@ impl ConfigManager {
             .create(true)
             .write(true)
             .append(false)
+            .truncate(true)
             .open(path)?;
 
         file.write_all(json_string.as_bytes())?;
