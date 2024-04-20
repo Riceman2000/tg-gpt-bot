@@ -11,6 +11,7 @@ tokio = { version = "1.37.0", features = ["rt-multi-thread", "macros"] }
 dotenv = "0.15.0"
 anyhow = "1.0.82"
 
+
 # To run the Telegram bot with teloxide
 teloxide = { version = "0.12", features = ["macros"] }
 pretty_env_logger = "0.5"
