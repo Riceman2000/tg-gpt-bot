@@ -1,6 +1,7 @@
 use super::open_ai_api::OpenAiApi;
+use rand::Rng;
 use teloxide::prelude::*;
-use teloxide::types::InputFile;
+use teloxide::types::{DiceEmoji, InputFile};
 use url::Url;
 
 pub struct Response {
@@ -98,6 +99,34 @@ impl Response {
                 self.bot.send_message(self.msg.chat.id, response).await?;
             }
         };
+        Ok(())
+    }
+
+    /// Lets go gambling!
+    /// # Errors
+    /// Telegram API failure
+    pub async fn gamble(&self) -> ResponseResult<()> {
+        //  Thread random must be dropped before async
+        let random_num = {
+            let mut rng = rand::thread_rng();
+            rng.gen_range(0..=6)
+        };
+
+        let send_dice = |emoji| self.bot.send_dice(self.msg.chat.id).emoji(emoji);
+        match random_num {
+            0 => send_dice(DiceEmoji::Dice).await?,
+            1 => send_dice(DiceEmoji::Darts).await?,
+            2 => send_dice(DiceEmoji::Basketball).await?,
+            3 => send_dice(DiceEmoji::Football).await?,
+            4 => send_dice(DiceEmoji::Bowling).await?,
+            5 => send_dice(DiceEmoji::SlotMachine).await?,
+            _ => {
+                self.bot
+                    .send_message(self.msg.chat.id, "Gambling is bad, you loose.")
+                    .await?
+            }
+        };
+
         Ok(())
     }
 }

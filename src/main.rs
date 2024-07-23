@@ -39,6 +39,8 @@ enum Command {
     ChatPurge(String),
     #[command(description = "Send a prompt to generate an image")]
     Image(String),
+    #[command(description = "Play some skill games")]
+    Gamble,
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
@@ -61,6 +63,9 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
         }
         Command::Image(prompt) => {
             responder.image(prompt).await?;
+        }
+        Command::Gamble => {
+            responder.gamble().await?;
         }
     };
     Ok(())

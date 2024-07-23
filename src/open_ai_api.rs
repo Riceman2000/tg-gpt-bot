@@ -21,6 +21,9 @@ impl Default for OpenAiApi {
 }
 
 impl OpenAiApi {
+    /// Form a Open AI interface, does not make any requests by itself
+    /// # Panics
+    /// Failure to load dotenv
     #[must_use]
     pub fn new() -> Self {
         if env::var("OPEN_AI_TOKEN").is_err() || env::var("OPEN_AI_URI").is_err() {
