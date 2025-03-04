@@ -40,7 +40,7 @@ enum Command {
     #[command(description = "Send a prompt to generate an image")]
     Image(String),
     #[command(description = "Play some skill games")]
-    Gamble,
+    Gamble(String),
 }
 
 async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
@@ -64,8 +64,8 @@ async fn answer(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
         Command::Image(prompt) => {
             responder.image(prompt).await?;
         }
-        Command::Gamble => {
-            responder.gamble().await?;
+        Command::Gamble(prompt) => {
+            responder.gamble(prompt).await?;
         }
     };
     Ok(())
