@@ -44,7 +44,7 @@ jobs:
       - name: cargo-build
         run: cargo build --release
       - name: artifact-build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tg-gpt-bot
           path: target/release/tg-gpt-bot
