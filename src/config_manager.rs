@@ -11,16 +11,18 @@ pub struct ConfigManager {
     pub chat_base_prompt: String,
     pub max_tokens: u32,
     pub image_size: String,
+    pub image_model: String,
 }
 
 // Default config values
 impl Default for ConfigManager {
     fn default() -> Self {
         ConfigManager {
-            chat_model: "gpt-4".to_string(),
+            chat_model: "gpt-4o".to_string(),
             chat_base_prompt: "You are an assistant that is built into a Telegram bot. Only respond with plaintext and if you are writing code begin with CODE-START and end with CODE-END.".to_string(),
             max_tokens: 1024,
-            image_size: "512x512".to_string(),
+            image_size: "1024x1792".to_string(),
+            image_model: "dall-e-3".to_string(),
         }
     }
 }
@@ -85,7 +87,8 @@ mod tests {
             "chat_model": "gpt-3.5-turbo",
             "chat_base_prompt": "Test prompt",
             "max_tokens": 1024,
-            "image_size": "512x512"
+            "image_size": "1024x1792",
+            "image_model": "dall-e-3"
         }
         "#;
         fs::write("test_config.json", config_data).unwrap();
@@ -98,10 +101,8 @@ mod tests {
     #[test]
     fn test_write_file() {
         let config = ConfigManager {
-            chat_model: "gpt-3.5-turbo".to_string(),
             chat_base_prompt: "Test write".to_string(),
-            max_tokens: 1024,
-            image_size: "512x512".to_string(),
+            ..Default::default()
         };
 
         let path = Path::new("test_config_write.json");
@@ -125,7 +126,7 @@ mod tests {
         {
             "chat_model": "gpt-3.5-turbo",
             "max_tokens": 1024,
-            "image_size": "512x512"
+            "image_size": "1024x1792"
         }
         "#;
         fs::write("test_incomplete_config.json", config_data).unwrap();

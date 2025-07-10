@@ -147,6 +147,7 @@ impl OpenAiApi {
         let config = ConfigManager::new()?;
 
         let request_data = OpenAiRequestImage {
+            model: config.image_model,
             prompt,
             n: 1,
             size: config.image_size,
@@ -196,6 +197,7 @@ struct ResponseImage {
 
 #[derive(Serialize, Debug)]
 struct OpenAiRequestImage {
+    model: String,
     prompt: String,
     n: u8,
     size: String,
