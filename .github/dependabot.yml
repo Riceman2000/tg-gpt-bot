@@ -6,6 +6,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    target-branch: "dependecy-updates"
+    target-branch: "main"
     labels: 
       - "dependencies"
