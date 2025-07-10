@@ -16,10 +16,10 @@ build: clippy
 	cargo build --release
 
 t: test
-test: build 
+test:  
 	cargo test
 
-service: spell build
+service: spell test build 
 	@echo "Restarting service"
 	sudo systemctl restart tg-bot.service
 	@echo "Service restarted, status:"
