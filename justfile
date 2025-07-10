@@ -8,7 +8,7 @@ spell-watch:
 	watchexec "clear && typos --sort"
 
 c: clippy
-clippy:
+clippy: spell
 	cargo clippy --all-targets -- -W clippy::pedantic
 
 b: build

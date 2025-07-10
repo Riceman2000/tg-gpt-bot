@@ -33,7 +33,7 @@ enum Command {
     Source,
     #[command(description = "Test API connection by fetching a list of models from OpenAI")]
     TestApi,
-    #[command(description = "Chat with Chat-GPT, chats are persistant for each group/DM")]
+    #[command(description = "Chat with Chat-GPT, chats are persistent for each group/DM")]
     Chat(String),
     #[command(description = "Reset Chat-GPT's conversation. Optionally include a system prompt.")]
     ChatPurge(String),
