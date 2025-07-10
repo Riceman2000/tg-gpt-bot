@@ -93,14 +93,14 @@ impl ChatHistory {
             prompt.to_string()
         };
 
-        debug!("Init prompt: {}", init_prompt);
+        debug!("Init prompt: {init_prompt}");
 
         self.messages = vec![MessageChat {
             role: "system".to_string(),
             content: init_prompt.to_string(),
         }];
 
-        debug!("Post-purge struct: {:?}", self);
+        debug!("Post-purge struct: {self:?}");
 
         self.write_file(chat_id)?;
         Ok(self)

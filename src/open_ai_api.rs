@@ -70,7 +70,7 @@ impl OpenAiApi {
         // Format the number of models and return it
         let model_names: Vec<&str> = json.data.iter().map(|m| m.id.as_ref()).collect();
         let output = format!("Connection opened with {} models found!", model_names.len());
-        debug!("Connection test output: {}", output);
+        debug!("Connection test output: {output}");
         Ok(output)
     }
 
@@ -79,7 +79,7 @@ impl OpenAiApi {
     /// Network failure or response deserialization failure
     pub async fn chat(&self, prompt: String, chat_id: String) -> Result<String> {
         info!(target: "api_events", "Chat gen started.");
-        debug!(target: "api_events", "Chat prompt: {}", prompt);
+        debug!(target: "api_events", "Chat prompt: {prompt}");
         if prompt.is_empty() {
             info!(target: "api_events", "No prompt, stopping.");
             return Ok("Prompt is empty, usage: '/chat [PROMPT HERE]'".to_string());
@@ -111,7 +111,7 @@ impl OpenAiApi {
         // Add the response back to the history
         history.add_entry(&chat_id, &Role::Assistant, &output)?;
 
-        debug!("Chat output: {}", output);
+        debug!("Chat output: {output}");
         Ok(output)
     }
 
@@ -121,7 +121,7 @@ impl OpenAiApi {
     /// OS file errors
     pub fn chat_purge(&self, chat_id: &str, prompt: &str) -> Result<String> {
         info!(target: "api_events", "Chat purge started.");
-        debug!(target: "api_events", "Chat purge prompt: {}", prompt);
+        debug!(target: "api_events", "Chat purge prompt: {prompt}");
 
         // Grab info from config file
         let history = ChatHistory::new(chat_id)?;
@@ -139,7 +139,7 @@ impl OpenAiApi {
     /// OS file errors
     pub async fn image(&self, prompt: String) -> Result<String> {
         info!(target: "api_events", "Image gen started.");
-        debug!(target: "api_events", "Image prompt: {}", prompt);
+        debug!(target: "api_events", "Image prompt: {prompt}");
         if prompt.is_empty() {
             return Ok("Prompt is empty, usage: '/image [PROMPT HERE]'".to_string());
         }
